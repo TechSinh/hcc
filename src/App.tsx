@@ -23,10 +23,12 @@ export default function App() {
     }
   });
 
-  const allItems = useMemo<LearningItem[]>(
-    () => (extraPackLoaded ? [...CORE_SEED_ITEMS, ...EXTRA_MOCK_EXAM_ITEMS] : CORE_SEED_ITEMS),
-    [extraPackLoaded]
-  );
+  const allItems = useMemo<LearningItem[]>(() => {
+    const core = Array.isArray(CORE_SEED_ITEMS) ? CORE_SEED_ITEMS : [];
+    const extra =
+      extraPackLoaded && Array.isArray(EXTRA_MOCK_EXAM_ITEMS) ? EXTRA_MOCK_EXAM_ITEMS : [];
+    return [...core, ...extra];
+  }, [extraPackLoaded]);
 
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -63,15 +65,15 @@ export default function App() {
 
   const wrongIds = useMemo(() => Object.keys(mistakeMap), [mistakeMap]);
 
-  const subjectItems = useMemo(
-    () => allItems.filter((item) => item.subject === subject),
-    [allItems, subject]
-  );
+  const subjectItems = useMemo(() => {
+    const bySub = allItems.filter((item) => item.subject === subject);
+    return bySub.length > 0 ? bySub : allItems;
+  }, [allItems, subject]);
 
-  const subjectFormulaCards = useMemo(
-    () => EXAM_FORMULA_CARDS.filter((card) => card.subject === subject),
-    [subject]
-  );
+  const subjectFormulaCards = useMemo(() => {
+    const cards = Array.isArray(EXAM_FORMULA_CARDS) ? EXAM_FORMULA_CARDS : [];
+    return cards.filter((card) => card.subject === subject);
+  }, [subject]);
 
   const poolItems: LearningItem[] = useMemo(() => {
     if (!reviewWrongOnly) return subjectItems;
@@ -79,7 +81,8 @@ export default function App() {
     return filtered.length > 0 ? filtered : subjectItems;
   }, [reviewWrongOnly, subjectItems, wrongIds]);
 
-  const current = poolItems[index % poolItems.length] ?? subjectItems[0];
+  const safePool = poolItems.length > 0 ? poolItems : CORE_SEED_ITEMS;
+  const current: LearningItem = safePool[index % safePool.length] ?? CORE_SEED_ITEMS[0];
 
   const resetQuestionState = () => {
     setSelected(null);
@@ -133,7 +136,7 @@ export default function App() {
 
   const handleNext = () => {
     resetQuestionState();
-    setIndex((prev) => (prev + 1) % poolItems.length);
+    setIndex((prev) => (prev + 1) % safePool.length);
   };
 
   const mistakeList = Object.values(mistakeMap).sort((a, b) => b.wrongCount - a.wrongCount);
@@ -224,7 +227,7 @@ export default function App() {
           <>
             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs border border-slate-200">
               <span className="text-slate-600">
-                Câu {(index % poolItems.length) + 1}/{poolItems.length}
+                Câu {(index % safePool.length) + 1}/{safePool.length}
                 {reviewWrongOnly ? ' (Ôn câu sai)' : ''}
               </span>
               <button
