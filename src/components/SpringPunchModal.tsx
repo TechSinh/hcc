@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface SpringPunchModalProps {
   open: boolean;
   onClose: () => void;
   mistakeNote: string;
   guidingQuestion: string;
+  hints?: string[];
   topic: string;
 }
 
@@ -13,9 +14,21 @@ export const SpringPunchModal: React.FC<SpringPunchModalProps> = ({
   onClose,
   mistakeNote,
   guidingQuestion,
+  hints = [],
   topic,
 }) => {
+  const [revealedHintCount, setRevealedHintCount] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      setRevealedHintCount(0);
+    }
+  }, [open, topic, guidingQuestion]);
+
   if (!open) return null;
+
+  const safeHints = Array.isArray(hints) ? hints : [];
+  const hasMoreHints = revealedHintCount < safeHints.length;
 
   return (
     <div
@@ -85,26 +98,26 @@ export const SpringPunchModal: React.FC<SpringPunchModalProps> = ({
             fontSize: 11,
             fontWeight: 800,
             textTransform: 'uppercase',
-            letterSpacing: '0.08em',
+            letterSpacing: '0.07em',
             color: '#b45309',
             backgroundColor: '#fef3c7',
             padding: '4px 10px',
             borderRadius: 9999,
           }}
         >
-          Boing! Nắm đấm lò xo bật ra! • {topic}
+          Boing! Lò xo của bố bật ra! • {topic}
         </div>
 
         <h2
           style={{
             margin: '10px 0 0',
-            fontSize: 19,
+            fontSize: 18.5,
             fontWeight: 800,
             color: '#0f172a',
-            lineHeight: 1.3,
+            lineHeight: 1.32,
           }}
         >
-          Dừng lại một nhịp! Bắt đúng bẫy tư duy nhé
+          Hì, bố gài nhẹ một cú—con soi lại xem lật kèo được không!
         </h2>
 
         <div style={{ marginTop: 14, textAlign: 'left', fontSize: 12.5, lineHeight: 1.55 }}>
@@ -118,7 +131,7 @@ export const SpringPunchModal: React.FC<SpringPunchModalProps> = ({
               marginBottom: 10,
             }}
           >
-            <strong>Lỗi hay gặp ở dạng này:</strong> {mistakeNote}
+            <strong>Chỗ dễ vấp ở kèo này:</strong> {mistakeNote}
           </div>
           <div
             style={{
@@ -129,29 +142,74 @@ export const SpringPunchModal: React.FC<SpringPunchModalProps> = ({
               color: '#1e1b4b',
             }}
           >
-            <strong>Câu hỏi gợi mở (không giải hộ):</strong> &ldquo;{guidingQuestion}&rdquo;
+            <strong>Bố hỏi gợi mở cho con:</strong> &ldquo;{guidingQuestion}&rdquo;
           </div>
+
+          {revealedHintCount > 0 && (
+            <div
+              style={{
+                marginTop: 10,
+                borderRadius: 14,
+                backgroundColor: '#fffbeb',
+                border: '1px solid #fde68a',
+                padding: 12,
+                color: '#78350f',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+              }}
+            >
+              <strong style={{ color: '#92400e' }}>Gợi ý thêm của bố:</strong>
+              {safeHints.slice(0, revealedHintCount).map((hintText, idx) => (
+                <div key={idx}>
+                  • Bước {idx + 1}: {hintText}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            marginTop: 16,
-            width: '100%',
-            minHeight: 46,
-            borderRadius: 14,
-            border: 'none',
-            backgroundColor: '#0f172a',
-            color: '#ffffff',
-            padding: '12px 16px',
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
-        >
-          Thu lò xo &amp; Tự làm lại bước này
-        </button>
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {hasMoreHints && (
+            <button
+              type="button"
+              onClick={() => setRevealedHintCount((c) => Math.min(c + 1, safeHints.length))}
+              style={{
+                width: '100%',
+                minHeight: 42,
+                borderRadius: 14,
+                border: '1px solid #f59e0b',
+                backgroundColor: '#fffbeb',
+                color: '#92400e',
+                padding: '10px 14px',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Xin bố gợi ý thêm 1 bước ({revealedHintCount}/{safeHints.length})
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              width: '100%',
+              minHeight: 46,
+              borderRadius: 14,
+              border: 'none',
+              backgroundColor: '#0f172a',
+              color: '#ffffff',
+              padding: '12px 16px',
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Thu lò xo &amp; Con tự giải lại ngay!
+          </button>
+        </div>
       </div>
     </div>
   );

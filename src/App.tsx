@@ -23,14 +23,33 @@ import {
 } from './services/supabaseSync';
 import { SpringPunchModal } from './components/SpringPunchModal';
 import { VisualDesmosLab } from './components/VisualDesmosLab';
+import { SpinChallengeGame } from './components/SpinChallengeGame';
 
 type DrillMode = 'standard' | 'trap_focus' | 'violympic_speed' | 'recall_review';
+type ActiveTab = 'quest' | 'spin' | 'lab' | 'formulas' | 'parent';
+
+const STAGE_SIZE = 3;
+const MAX_WEEKS_LEARNED = 16;
+
+const DAD_PRAISE_LINES: string[] = [
+  'Bố công nhận pha này! Tuyển thủ Khánh Ngọc xử lý quá gọn.',
+  'Đúng bài rồi con gái! Bố tưởng câu này làm khó được con chứ.',
+  'Bật chế độ chính xác cao luôn! Cứ giữ nhịp này là tự tin vào lớp 10.',
+  'Ngọt lịm! Thêm một bước nữa là chạm mốc thưởng của bố.',
+];
+
+const DAD_BANTER_MISS_LINES: string[] = [
+  'Hì hì, bố cài bẫy nhẹ tí thôi—con soi lại thử xem nào!',
+  'Suýt hạ gục thử thách rồi! Nhìn kỹ lại điều kiện hoặc ngữ liệu nhé.',
+  'Bố bắt được một manh mối nhỏ rồi nè—thử hỏi gợi ý xem con tự bật ra không!',
+];
 
 const FALLBACK_ITEM: LearningItem = {
   id: 'fallback-toan9-01',
   subject: 'toan',
   topic: 'Phương trình bậc nhất hai ẩn',
-  sourceRef: 'Đề ôn chương 1 - Đề 1 - TN Câu 3',
+  weekSpan: 2,
+  sourceRef: 'Tuần 1-2 • Đề ôn chương 1 - Đề 1 - TN Câu 3',
   phaseOneCheck: 'Xác định tọa độ (x; y) của từng cặp số và thay đúng vị trí vào 2x - y - 1.',
   phaseOneQuickCheck: {
     question: 'Với cặp số (1; 1), giá trị nào được thay vào x và y?',
@@ -64,9 +83,10 @@ export default function App() {
 
   const [subject, setSubject] = useState<Subject>('toan');
   const [drillMode, setDrillMode] = useState<DrillMode>('standard');
+  const [within16WeeksOnly, setWithin16WeeksOnly] = useState<boolean>(true);
   const [selectedTopic, setSelectedTopic] = useState<string>('ALL');
   const [reviewWrongOnly, setReviewWrongOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState<'quest' | 'lab' | 'formulas' | 'parent'>('quest');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('quest');
 
   const [extraPackLoaded, setExtraPackLoaded] = useState<boolean>(initialState.extraPackLoaded);
   const [masteredIds, setMasteredIds] = useState<string[]>(initialState.masteredIds);
@@ -79,11 +99,15 @@ export default function App() {
   );
 
   const [index, setIndex] = useState(0);
-  const [phaseOneDone, setPhaseOneDone] = useState(false);
+  const [stageClearedCount, setStageClearedCount] = useState(0);
+  const [stageRewardOpen, setStageRewardOpen] = useState(false);
+
+  const [quickCheckOpen, setQuickCheckOpen] = useState(false);
   const [quickCheckChoice, setQuickCheckChoice] = useState<string | null>(null);
   const [quickCheckFeedback, setQuickCheckFeedback] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<string | null>(null);
+  const [banterMessage, setBanterMessage] = useState<string | null>(null);
   const [hintStep, setHintStep] = useState(0);
   const [showTrapPreview, setShowTrapPreview] = useState(false);
 
@@ -108,6 +132,11 @@ export default function App() {
     const merged = [...core, ...extra];
     return merged.length > 0 ? merged : [FALLBACK_ITEM];
   }, [extraPackLoaded]);
+
+  const items16Weeks = useMemo<LearningItem[]>(() => {
+    const filtered = allItems.filter((item) => (item.weekSpan ?? 16) <= MAX_WEEKS_LEARNED);
+    return filtered.length > 0 ? filtered : allItems;
+  }, [allItems]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -140,10 +169,14 @@ export default function App() {
 
   const wrongIds = useMemo(() => Object.keys(mistakeMap), [mistakeMap]);
 
+  const baseWeekItems = useMemo(() => {
+    return within16WeeksOnly ? items16Weeks : allItems;
+  }, [within16WeeksOnly, items16Weeks, allItems]);
+
   const subjectItems = useMemo(() => {
-    const bySub = allItems.filter((item) => item.subject === subject);
-    return bySub.length > 0 ? bySub : allItems;
-  }, [allItems, subject]);
+    const bySub = baseWeekItems.filter((item) => item.subject === subject);
+    return bySub.length > 0 ? bySub : baseWeekItems;
+  }, [baseWeekItems, subject]);
 
   const topics = useMemo(() => {
     const set = new Set<string>();
@@ -153,8 +186,12 @@ export default function App() {
 
   const subjectFormulaCards = useMemo(() => {
     const cards = Array.isArray(EXAM_FORMULA_CARDS) ? EXAM_FORMULA_CARDS : [];
-    return cards.filter((card) => card.subject === subject);
-  }, [subject]);
+    const weekFiltered = within16WeeksOnly
+      ? cards.filter((card) => (card.weekSpan ?? 16) <= MAX_WEEKS_LEARNED)
+      : cards;
+    const targetList = weekFiltered.length > 0 ? weekFiltered : cards;
+    return targetList.filter((card) => card.subject === subject);
+  }, [subject, within16WeeksOnly]);
 
   const poolItems: LearningItem[] = useMemo(() => {
     let list = subjectItems;
@@ -195,39 +232,59 @@ export default function App() {
   const isCurrentReinforce = needsReinforcementIds.includes(current.id);
 
   const resetQuestionState = () => {
-    setPhaseOneDone(false);
+    setQuickCheckOpen(false);
     setQuickCheckChoice(null);
     setQuickCheckFeedback(null);
     setSelected(null);
+    setBanterMessage(null);
     setHintStep(0);
     setShowParentInline(false);
     setQuestionSec(0);
     setShowTrapPreview(drillMode === 'trap_focus');
   };
 
+  const resetPoolContext = () => {
+    setIndex(0);
+    setStageClearedCount(0);
+    setStageRewardOpen(false);
+    resetQuestionState();
+  };
+
   const handleSwitchSubject = (nextSubject: Subject) => {
     setSubject(nextSubject);
     setSelectedTopic('ALL');
-    setIndex(0);
-    resetQuestionState();
+    resetPoolContext();
   };
 
   const handleChangeMode = (nextMode: DrillMode) => {
     setDrillMode(nextMode);
     setIndex(0);
+    setStageClearedCount(0);
+    setStageRewardOpen(false);
     setShowTrapPreview(nextMode === 'trap_focus');
   };
 
   const handleSelectTopic = (nextTopic: string) => {
     setSelectedTopic(nextTopic);
-    setIndex(0);
-    resetQuestionState();
+    resetPoolContext();
   };
 
   const handleToggleWrongReview = () => {
     setReviewWrongOnly((prev) => !prev);
-    setIndex(0);
+    resetPoolContext();
+  };
+
+  const handleJumpToQuestion = (targetItem: LearningItem) => {
+    setSubject(targetItem.subject);
+    setSelectedTopic('ALL');
+    setReviewWrongOnly(false);
+    setActiveTab('quest');
     resetQuestionState();
+    const candidates = (within16WeeksOnly ? items16Weeks : allItems).filter(
+      (i) => i.subject === targetItem.subject
+    );
+    const foundIdx = candidates.findIndex((i) => i.id === targetItem.id);
+    setIndex(foundIdx >= 0 ? foundIdx : 0);
   };
 
   const handleToggleMastered = (itemId: string) => {
@@ -250,30 +307,44 @@ export default function App() {
   const handleQuickCheckAnswer = (opt: string) => {
     setQuickCheckChoice(opt);
     if (quickCheck && opt === quickCheck.correctAnswer) {
-      setPhaseOneDone(true);
-      setQuickCheckFeedback('Chuẩn Pha 1! Con đã chốt đúng điểm mấu chốt, sang chọn đáp án nhé.');
+      setQuickCheckFeedback('Bố duyệt! Con đã bắt đúng điểm chốt rồi đó.');
     } else {
-      setQuickCheckFeedback('Chưa khớp điểm chốt Pha 1. Con thử rà lại gợi ý phía trên nhé.');
+      setQuickCheckFeedback('Chưa trúng điểm chốt của bố—nhìn lại gợi ý ngắn xem sao!');
     }
   };
 
   const handleSelectOption = (opt: string) => {
+    const firstTimeOnQuestion = selected === null;
     setSelected(opt);
     setAnsweredCount((c) => c + 1);
 
     if (opt === current.correctAnswer) {
       const nextStreak = streak + 1;
       const speedBonus = drillMode === 'violympic_speed' && questionSec <= 25 ? 5 : 0;
+      setBanterMessage(DAD_PRAISE_LINES[answeredCount % DAD_PRAISE_LINES.length]);
       setCorrectCount((c) => c + 1);
       setStreak(nextStreak);
       setBestStreak((b) => Math.max(b, nextStreak));
       setScore((s) => s + 10 + speedBonus);
+
       if (hintStep === 0) {
         setNeedsReinforcementIds((prev) => prev.filter((id) => id !== current.id));
+      }
+
+      if (firstTimeOnQuestion) {
+        const nextStageStep = stageClearedCount + 1;
+        if (nextStageStep >= STAGE_SIZE) {
+          setStageClearedCount(STAGE_SIZE);
+          setScore((s) => s + 15);
+          setStageRewardOpen(true);
+        } else {
+          setStageClearedCount(nextStageStep);
+        }
       }
       return;
     }
 
+    setBanterMessage(DAD_BANTER_MISS_LINES[answeredCount % DAD_BANTER_MISS_LINES.length]);
     setStreak(0);
     setNeedsReinforcementIds((prev) =>
       prev.includes(current.id) ? prev : [...prev, current.id]
@@ -313,11 +384,18 @@ export default function App() {
     setNeedsReinforcementIds([]);
     setCoachedIds([]);
     setReviewWrongOnly(false);
-    setIndex(0);
-    resetQuestionState();
+    resetPoolContext();
   };
 
   const handleNext = () => {
+    setStageRewardOpen(false);
+    resetQuestionState();
+    setIndex((prev) => (prev + 1) % poolItems.length);
+  };
+
+  const handleStartNextStage = () => {
+    setStageRewardOpen(false);
+    setStageClearedCount(0);
     resetQuestionState();
     setIndex((prev) => (prev + 1) % poolItems.length);
   };
@@ -353,8 +431,7 @@ export default function App() {
       if (typeof res.remoteState.bestStreak === 'number') {
         setBestStreak(res.remoteState.bestStreak);
       }
-      setIndex(0);
-      resetQuestionState();
+      resetPoolContext();
     }
     setSyncStatusMessage(res.message);
     setSyncBusy(false);
@@ -392,18 +469,17 @@ export default function App() {
 
   const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
   const isCorrect = selected === current.correctAnswer;
-  const progressPercent = Math.round((((index % poolItems.length) + 1) / poolItems.length) * 100);
-  const currentPhaseNum = selected ? 3 : phaseOneDone ? 2 : 1;
+  const currentStageNumber = Math.floor(answeredCount / STAGE_SIZE) + 1;
 
   const sessionParentPrompt =
     mistakeList.length > 0
       ? mistakeList[0].guidingQuestion
-      : 'Hôm nay con thấy dạng bài nào dễ hiểu nhất và điều kiện nào cần lưu ý kỹ nhất khi lên cấp 3?';
+      : 'Hôm nay con thấy kèo thách đấu nào của bố thú vị nhất và điều kiện nào cần lưu ý kỹ nhất khi lên cấp 3?';
 
   return (
-    <div className="slim-page">
+    <div className="dad-challenge-page">
       <style>{`
-        .slim-page {
+        .dad-challenge-page {
           min-height: 100vh;
           background: linear-gradient(180deg, #fff7ed 0%, #f8fafc 45%, #eff6ff 100%);
           color: #0f172a;
@@ -411,15 +487,15 @@ export default function App() {
           padding-bottom: 28px;
           box-sizing: border-box;
         }
-        .slim-topbar {
+        .dad-topbar {
           background: #ffffff;
           border-bottom: 1px solid #e2e8f0;
           position: sticky;
           top: 0;
           z-index: 40;
         }
-        .slim-topbar-inner {
-          max-width: 1140px;
+        .dad-topbar-inner {
+          max-width: 1120px;
           margin: 0 auto;
           padding: 8px 12px;
           display: flex;
@@ -428,37 +504,37 @@ export default function App() {
           justify-content: space-between;
           gap: 8px;
         }
-        .slim-container {
-          max-width: 1080px;
+        .dad-container {
+          max-width: 1040px;
           margin: 12px auto 0;
           padding: 0 12px;
           display: flex;
           flex-direction: column;
           gap: 12px;
         }
-        .slim-nav-row {
+        .dad-nav-row {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
           justify-content: space-between;
           gap: 8px;
         }
-        .slim-tabs {
+        .dad-tabs {
           display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 6px;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 5px;
           flex: 1;
-          min-width: 280px;
+          min-width: 300px;
         }
-        .slim-phase-bar {
+        .dad-stage-dots {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 6px;
+          gap: 8px;
         }
-        .slim-topic-desktop {
+        .dad-topic-desktop {
           display: none;
         }
-        .slim-topic-mobile {
+        .dad-topic-mobile {
           display: block;
           width: 100%;
           min-height: 40px;
@@ -471,33 +547,33 @@ export default function App() {
           font-weight: 700;
         }
         @media (min-width: 768px) {
-          .slim-topic-desktop {
+          .dad-topic-desktop {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
           }
-          .slim-topic-mobile {
+          .dad-topic-mobile {
             display: none;
           }
         }
-        .slim-grid {
+        .dad-grid {
           display: grid;
           grid-template-columns: 1fr;
           gap: 12px;
           align-items: start;
         }
         @media (min-width: 920px) {
-          .slim-container {
+          .dad-container {
             margin-top: 16px;
             padding: 0 16px;
             gap: 14px;
           }
-          .slim-grid {
+          .dad-grid {
             grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
             gap: 18px;
           }
         }
-        .slim-card {
+        .dad-card {
           background: #ffffff;
           border: 1px solid #e2e8f0;
           border-radius: 20px;
@@ -505,11 +581,11 @@ export default function App() {
           box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
         }
         @media (min-width: 920px) {
-          .slim-card {
+          .dad-card {
             padding: 18px;
           }
         }
-        .slim-btn {
+        .dad-btn {
           min-height: 44px;
           border-radius: 12px;
           font-size: 13px;
@@ -517,13 +593,13 @@ export default function App() {
           cursor: pointer;
           transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
         }
-        .slim-btn:active {
+        .dad-btn:active {
           transform: scale(0.98);
         }
       `}</style>
 
-      <header className="slim-topbar">
-        <div className="slim-topbar-inner">
+      <header className="dad-topbar">
+        <div className="dad-topbar-inner">
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
             <span
               style={{
@@ -535,7 +611,7 @@ export default function App() {
                 borderRadius: 10,
               }}
             >
-              LỚP 9 • KHÁNH NGỌC
+              BỐ THÁCH – CON GIẢI • KHÁNH NGỌC
             </span>
             <span
               style={{
@@ -547,11 +623,31 @@ export default function App() {
                 borderRadius: 9999,
               }}
             >
-              {score}đ • Chuỗi {streak} (Kỷ lục {bestStreak}) • {accuracy}% • Thuộc {masteredInSubjectCount}/{subjectItems.length} • {questionSec}s ({formatDuration(elapsedSec)})
+              Vòng {currentStageNumber} • {score}đ • Chuỗi {streak} (Kỷ lục {bestStreak}) • Thuộc {masteredInSubjectCount}/{subjectItems.length} • {questionSec}s ({formatDuration(elapsedSec)})
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => {
+                setWithin16WeeksOnly((prev) => !prev);
+                setSelectedTopic('ALL');
+                resetPoolContext();
+              }}
+              style={{
+                borderRadius: 9,
+                border: within16WeeksOnly ? 'none' : '1px solid #cbd5e1',
+                backgroundColor: within16WeeksOnly ? '#0f766e' : '#ffffff',
+                color: within16WeeksOnly ? '#ffffff' : '#334155',
+                padding: '6px 10px',
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {within16WeeksOnly ? 'Trong 16 tuần' : 'Tất cả tuần'}
+            </button>
             <button
               type="button"
               onClick={handleToggleWrongReview}
@@ -566,7 +662,7 @@ export default function App() {
                 cursor: 'pointer',
               }}
             >
-              {reviewWrongOnly ? 'Thoát sai' : `Ôn sai (${wrongIds.length})`}
+              {reviewWrongOnly ? 'Thoát kèo sai' : `Kèo sai (${wrongIds.length})`}
             </button>
             <button
               type="button"
@@ -582,30 +678,46 @@ export default function App() {
                 cursor: 'pointer',
               }}
             >
-              Lò xo: {punchEnabled ? 'Bật' : 'Tắt'}
+              Lò xo bố: {punchEnabled ? 'Bật' : 'Tắt'}
             </button>
           </div>
         </div>
       </header>
 
-      <div className="slim-container">
-        <div className="slim-nav-row">
-          <div className="slim-tabs">
+      <div className="dad-container">
+        <div className="dad-nav-row">
+          <div className="dad-tabs">
             <button
               type="button"
               onClick={() => setActiveTab('quest')}
               style={{
                 borderRadius: 10,
                 border: 'none',
-                padding: '8px 6px',
-                fontSize: 12,
+                padding: '8px 5px',
+                fontSize: 11.5,
                 fontWeight: 800,
                 cursor: 'pointer',
                 backgroundColor: activeTab === 'quest' ? '#0f172a' : '#ffffff',
                 color: activeTab === 'quest' ? '#ffffff' : '#334155',
               }}
             >
-              Luyện bài
+              Đấu trí
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('spin')}
+              style={{
+                borderRadius: 10,
+                border: 'none',
+                padding: '8px 5px',
+                fontSize: 11.5,
+                fontWeight: 800,
+                cursor: 'pointer',
+                backgroundColor: activeTab === 'spin' ? '#ea580c' : '#ffffff',
+                color: activeTab === 'spin' ? '#ffffff' : '#334155',
+              }}
+            >
+              Vòng quay
             </button>
             <button
               type="button"
@@ -613,8 +725,8 @@ export default function App() {
               style={{
                 borderRadius: 10,
                 border: 'none',
-                padding: '8px 6px',
-                fontSize: 12,
+                padding: '8px 5px',
+                fontSize: 11.5,
                 fontWeight: 800,
                 cursor: 'pointer',
                 backgroundColor: activeTab === 'lab' ? '#0284c7' : '#ffffff',
@@ -629,8 +741,8 @@ export default function App() {
               style={{
                 borderRadius: 10,
                 border: 'none',
-                padding: '8px 6px',
-                fontSize: 12,
+                padding: '8px 5px',
+                fontSize: 11.5,
                 fontWeight: 800,
                 cursor: 'pointer',
                 backgroundColor: activeTab === 'formulas' ? '#1d4ed8' : '#ffffff',
@@ -645,15 +757,15 @@ export default function App() {
               style={{
                 borderRadius: 10,
                 border: 'none',
-                padding: '8px 6px',
-                fontSize: 12,
+                padding: '8px 5px',
+                fontSize: 11.5,
                 fontWeight: 800,
                 cursor: 'pointer',
                 backgroundColor: activeTab === 'parent' ? '#4338ca' : '#ffffff',
                 color: activeTab === 'parent' ? '#ffffff' : '#334155',
               }}
             >
-              Phụ huynh ({totalWrongAttempts})
+              Góc bố ({totalWrongAttempts})
             </button>
           </div>
 
@@ -661,7 +773,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => {
-                setActiveTab('quest');
+                if (activeTab === 'spin') setActiveTab('quest');
                 handleSwitchSubject('toan');
               }}
               style={{
@@ -680,7 +792,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => {
-                setActiveTab('quest');
+                if (activeTab === 'spin') setActiveTab('quest');
                 handleSwitchSubject('van');
               }}
               style={{
@@ -699,80 +811,103 @@ export default function App() {
           </div>
         </div>
 
-        <div className="slim-phase-bar">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('quest');
-              setSelected(null);
-              setPhaseOneDone(false);
-            }}
-            style={{
-              borderRadius: 10,
-              padding: '6px 8px',
-              fontSize: 11.5,
-              fontWeight: 800,
-              textAlign: 'center',
-              cursor: 'pointer',
-              border: `1px solid ${currentPhaseNum === 1 ? '#ea580c' : '#cbd5e1'}`,
-              backgroundColor: currentPhaseNum === 1 ? '#fff7ed' : '#ffffff',
-              color: currentPhaseNum === 1 ? '#c2410c' : '#64748b',
-            }}
-          >
-            1. Chốt nền tảng
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('quest');
-              setSelected(null);
-              setPhaseOneDone(true);
-            }}
-            style={{
-              borderRadius: 10,
-              padding: '6px 8px',
-              fontSize: 11.5,
-              fontWeight: 800,
-              textAlign: 'center',
-              cursor: 'pointer',
-              border: `1px solid ${currentPhaseNum === 2 ? '#2563eb' : '#cbd5e1'}`,
-              backgroundColor: currentPhaseNum === 2 ? '#eff6ff' : '#ffffff',
-              color: currentPhaseNum === 2 ? '#1d4ed8' : '#64748b',
-            }}
-          >
-            2. Giải &amp; kiểm chứng
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('quest');
-              if (!selected && safeOptions[0]) {
-                handleSelectOption(safeOptions[0]);
-              }
-            }}
-            style={{
-              borderRadius: 10,
-              padding: '6px 8px',
-              fontSize: 11.5,
-              fontWeight: 800,
-              textAlign: 'center',
-              cursor: 'pointer',
-              border: `1px solid ${currentPhaseNum === 3 ? '#059669' : '#cbd5e1'}`,
-              backgroundColor: currentPhaseNum === 3 ? '#ecfdf5' : '#ffffff',
-              color: currentPhaseNum === 3 ? '#047857' : '#64748b',
-            }}
-          >
-            3. Bắt lỗi &amp; nhớ bài
-          </button>
+        <div className="dad-stage-dots">
+          {Array.from({ length: STAGE_SIZE }).map((_, stepIdx) => {
+            const done = stepIdx < stageClearedCount;
+            const active = stepIdx === stageClearedCount && !stageRewardOpen;
+            return (
+              <div
+                key={stepIdx}
+                style={{
+                  borderRadius: 12,
+                  padding: '7px 10px',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  textAlign: 'center',
+                  border: `1.5px solid ${
+                    done ? '#10b981' : active ? '#ea580c' : '#cbd5e1'
+                  }`,
+                  backgroundColor: done ? '#ecfdf5' : active ? '#fff7ed' : '#ffffff',
+                  color: done ? '#047857' : active ? '#c2410c' : '#64748b',
+                }}
+              >
+                {done
+                  ? `Kèo ${stepIdx + 1} hạ gục ✓`
+                  : active
+                  ? `Kèo ${stepIdx + 1} (Con đang giải)`
+                  : `Kèo ${stepIdx + 1}`}
+              </div>
+            );
+          })}
         </div>
 
-        {activeTab === 'lab' ? (
-          <section className="slim-card">
+        {stageRewardOpen && (
+          <div
+            style={{
+              borderRadius: 18,
+              border: '2px solid #f59e0b',
+              background: 'linear-gradient(120deg, #fffbeb 0%, #fef3c7 100%)',
+              padding: 16,
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 900,
+                  color: '#b45309',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Bố đầu hàng kèo này! Thưởng +15 điểm cho Khánh Ngọc
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', marginTop: 3 }}>
+                Con đã vượt qua trọn vẹn {STAGE_SIZE} câu thách đấu của vòng {currentStageNumber}!
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleStartNextStage}
+              className="dad-btn"
+              style={{
+                border: 'none',
+                backgroundColor: '#ea580c',
+                color: '#ffffff',
+                padding: '10px 16px',
+              }}
+            >
+              Nhận kèo vòng tiếp theo →
+            </button>
+          </div>
+        )}
+
+        {activeTab === 'spin' && (
+          <section className="dad-card">
+            <SpinChallengeGame
+              items16Weeks={items16Weeks}
+              currentSubject={subject}
+              punchEnabled={punchEnabled}
+              onTogglePunch={() => setPunchEnabled((v) => !v)}
+              onJumpToQuestion={handleJumpToQuestion}
+              onBackToQuest={() => setActiveTab('quest')}
+            />
+          </section>
+        )}
+
+        {activeTab === 'lab' && (
+          <section className="dad-card">
             <VisualDesmosLab />
           </section>
-        ) : (
-          <div className="slim-grid">
-            <section className="slim-card" style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+        )}
+
+        {activeTab !== 'spin' && activeTab !== 'lab' && (
+          <div className="dad-grid">
+            <section className="dad-card" style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
               <select
                 aria-label="Chọn dạng bài"
                 value={selectedTopic}
@@ -780,16 +915,16 @@ export default function App() {
                   setActiveTab('quest');
                   handleSelectTopic(e.target.value);
                 }}
-                className="slim-topic-mobile"
+                className="dad-topic-mobile"
               >
                 {topics.map((tp) => (
                   <option key={tp} value={tp}>
-                    {tp === 'ALL' ? 'Dạng: Tất cả chủ đề' : `Dạng: ${tp}`}
+                    {tp === 'ALL' ? 'Kèo: Tất cả chủ đề' : `Kèo: ${tp}`}
                   </option>
                 ))}
               </select>
 
-              <div className="slim-topic-desktop">
+              <div className="dad-topic-desktop">
                 {topics.map((tp) => {
                   const active = selectedTopic === tp;
                   return (
@@ -811,7 +946,7 @@ export default function App() {
                         cursor: 'pointer',
                       }}
                     >
-                      {tp === 'ALL' ? 'Tất cả dạng' : tp}
+                      {tp === 'ALL' ? 'Tất cả kèo' : tp}
                     </button>
                   );
                 })}
@@ -841,7 +976,7 @@ export default function App() {
                       cursor: 'pointer',
                     }}
                   >
-                    Chuẩn
+                    Đấu thường
                   </button>
                   <button
                     type="button"
@@ -857,7 +992,7 @@ export default function App() {
                       cursor: 'pointer',
                     }}
                   >
-                    Soi bẫy
+                    Bố lộ bẫy
                   </button>
                   <button
                     type="button"
@@ -894,27 +1029,8 @@ export default function App() {
                 </div>
 
                 <span style={{ fontSize: 11.5, fontWeight: 700, color: '#475569' }}>
-                  Câu {(index % poolItems.length) + 1}/{poolItems.length} ({progressPercent}%)
+                  Câu {(index % poolItems.length) + 1}/{poolItems.length}
                 </span>
-              </div>
-
-              <div
-                style={{
-                  height: 7,
-                  width: '100%',
-                  borderRadius: 9999,
-                  backgroundColor: '#e2e8f0',
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    height: '100%',
-                    width: `${progressPercent}%`,
-                    backgroundColor: subject === 'toan' ? '#ea580c' : '#059669',
-                    transition: 'width 0.25s ease',
-                  }}
-                />
               </div>
 
               <div
@@ -935,30 +1051,50 @@ export default function App() {
                   }}
                 >
                   <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>
-                    {current.topic} • {current.sourceRef}
+                    Kèo của bố: {current.topic} • {current.sourceRef}
                     {isCurrentReinforce && !isCurrentMastered ? ' • Cần củng cố' : ''}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleMastered(current.id)}
-                    style={{
-                      borderRadius: 9999,
-                      border: isCurrentMastered ? 'none' : '1px solid #10b981',
-                      backgroundColor: isCurrentMastered ? '#059669' : '#ffffff',
-                      color: isCurrentMastered ? '#ffffff' : '#047857',
-                      padding: '3px 10px',
-                      fontSize: 11,
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {isCurrentMastered ? 'Đã thuộc chắc ✓' : 'Đánh dấu đã thuộc'}
-                  </button>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {quickCheck && (
+                      <button
+                        type="button"
+                        onClick={() => setQuickCheckOpen((v) => !v)}
+                        style={{
+                          borderRadius: 9999,
+                          border: '1px solid #fdba74',
+                          backgroundColor: '#fff7ed',
+                          color: '#c2410c',
+                          padding: '3px 9px',
+                          fontSize: 11,
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {quickCheckOpen ? 'Ẩn câu hỏi bố' : 'Câu hỏi bố'}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleMastered(current.id)}
+                      style={{
+                        borderRadius: 9999,
+                        border: isCurrentMastered ? 'none' : '1px solid #10b981',
+                        backgroundColor: isCurrentMastered ? '#059669' : '#ffffff',
+                        color: isCurrentMastered ? '#ffffff' : '#047857',
+                        padding: '3px 10px',
+                        fontSize: 11,
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {isCurrentMastered ? 'Đã chinh phục ✓' : 'Đánh dấu đã thuộc'}
+                    </button>
+                  </div>
                 </div>
 
                 <p
                   style={{
-                    margin: '6px 0 0',
+                    margin: '7px 0 0',
                     fontSize: 15,
                     fontWeight: 700,
                     color: '#0f172a',
@@ -969,7 +1105,7 @@ export default function App() {
                 </p>
               </div>
 
-              {!phaseOneDone && quickCheck && (
+              {quickCheckOpen && quickCheck && (
                 <div
                   style={{
                     borderRadius: 13,
@@ -983,33 +1119,7 @@ export default function App() {
                     gap: 8,
                   }}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: 8,
-                    }}
-                  >
-                    <strong>Chốt Pha 1: {quickCheck.question}</strong>
-                    <button
-                      type="button"
-                      onClick={() => setPhaseOneDone(true)}
-                      style={{
-                        border: 'none',
-                        background: 'transparent',
-                        color: '#c2410c',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
-                        flexShrink: 0,
-                      }}
-                    >
-                      Bỏ qua chốt
-                    </button>
-                  </div>
-
+                  <strong>Bố hỏi thăm dò: {quickCheck.question}</strong>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {quickCheck.options.map((qOpt) => {
                       const picked = quickCheckChoice === qOpt;
@@ -1037,7 +1147,6 @@ export default function App() {
                       );
                     })}
                   </div>
-
                   {quickCheckFeedback && (
                     <div style={{ fontSize: 11.5, fontWeight: 700 }}>{quickCheckFeedback}</div>
                   )}
@@ -1056,7 +1165,7 @@ export default function App() {
                     lineHeight: 1.45,
                   }}
                 >
-                  <strong>Bẫy thường gặp:</strong> {current.commonMistake}
+                  <strong>Bố bật mí chỗ dễ vấp:</strong> {current.commonMistake}
                 </div>
               )}
 
@@ -1085,7 +1194,7 @@ export default function App() {
                       key={opt}
                       type="button"
                       onClick={() => handleSelectOption(opt)}
-                      className="slim-btn"
+                      className="dad-btn"
                       style={{
                         width: '100%',
                         border: `1.5px solid ${border}`,
@@ -1135,9 +1244,12 @@ export default function App() {
                     border: `1px solid ${isCorrect ? '#a7f3d0' : '#fecdd3'}`,
                   }}
                 >
-                  {isCorrect
-                    ? `Chính xác! ${current.parentGuide?.keyConcept ?? ''}`
-                    : `Chưa đúng (${ERROR_CATEGORY_LABELS[current.errorCategory]}): ${current.commonMistake}`}
+                  <div style={{ fontWeight: 800 }}>{banterMessage}</div>
+                  <div style={{ marginTop: 3 }}>
+                    {isCorrect
+                      ? current.parentGuide?.keyConcept ?? ''
+                      : `Góc nhớ (${ERROR_CATEGORY_LABELS[current.errorCategory]}): ${current.commonMistake}`}
+                  </div>
                 </div>
               )}
 
@@ -1145,7 +1257,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleOpenHint}
-                  className="slim-btn"
+                  className="dad-btn"
                   style={{
                     border: '1px solid #cbd5e1',
                     backgroundColor: '#ffffff',
@@ -1153,12 +1265,12 @@ export default function App() {
                     padding: '9px 10px',
                   }}
                 >
-                  Gợi ý ({Math.min(hintStep, safeHints.length)}/{safeHints.length})
+                  Thẻ gợi ý ({Math.min(hintStep, safeHints.length)}/{safeHints.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowParentInline((v) => !v)}
-                  className="slim-btn"
+                  className="dad-btn"
                   style={{
                     border: '1px solid #c7d2fe',
                     backgroundColor: '#eef2ff',
@@ -1166,14 +1278,14 @@ export default function App() {
                     padding: '9px 10px',
                   }}
                 >
-                  {showParentInline ? 'Ẩn gợi ý bố mẹ' : 'Gợi ý bố mẹ'}
+                  {showParentInline ? 'Cất thẻ hỏi của bố' : 'Rút thẻ hỏi của bố'}
                 </button>
               </div>
 
               <button
                 type="button"
                 onClick={handleNext}
-                className="slim-btn"
+                className="dad-btn"
                 style={{
                   width: '100%',
                   border: 'none',
@@ -1183,15 +1295,15 @@ export default function App() {
                   fontSize: 13.5,
                 }}
               >
-                Câu tiếp theo →
+                Sang kèo tiếp theo →
               </button>
             </section>
 
-            <aside className="slim-card" style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+            <aside className="dad-card" style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
               {activeTab === 'quest' && (
                 <>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
-                    Trợ lý tư duy &amp; lưu ý Pha 1
+                    Góc trợ giúp của HLV Bố
                   </div>
 
                   <div
@@ -1205,7 +1317,7 @@ export default function App() {
                       lineHeight: 1.5,
                     }}
                   >
-                    <strong>Điều kiện / Trọng tâm cần nhớ:</strong> {current.phaseOneCheck}
+                    <strong>Bố dặn trước khi giải:</strong> {current.phaseOneCheck}
                   </div>
 
                   {hintStep > 0 && (
@@ -1223,7 +1335,7 @@ export default function App() {
                         lineHeight: 1.5,
                       }}
                     >
-                      <strong style={{ color: '#92400e' }}>Gợi ý từng bước:</strong>
+                      <strong style={{ color: '#92400e' }}>Thẻ gợi ý từng bước:</strong>
                       {safeHints.slice(0, hintStep).map((h, i) => (
                         <div key={i}>
                           • Bước {i + 1}: {h}
@@ -1248,10 +1360,10 @@ export default function App() {
                       }}
                     >
                       <div>
-                        <strong>Kiến thức cốt lõi:</strong> {current.parentGuide?.keyConcept}
+                        <strong>Chìa khóa kiến thức:</strong> {current.parentGuide?.keyConcept}
                       </div>
                       <div>
-                        <strong>Câu hỏi gợi mở cho con:</strong> &ldquo;{current.parentGuide?.guidingQuestion}&rdquo;
+                        <strong>Bố hỏi gợi mở (không giải hộ):</strong> &ldquo;{current.parentGuide?.guidingQuestion}&rdquo;
                       </div>
                     </div>
                   )}
@@ -1282,10 +1394,9 @@ export default function App() {
                         type="button"
                         onClick={() => {
                           setExtraPackLoaded((prev) => !prev);
-                          setIndex(0);
-                          resetQuestionState();
+                          resetPoolContext();
                         }}
-                        className="slim-btn"
+                        className="dad-btn"
                         style={{
                           width: '100%',
                           border: 'none',
@@ -1356,20 +1467,21 @@ export default function App() {
                     }}
                   >
                     <div style={{ fontWeight: 800, fontSize: 13 }}>
-                      Tóm tắt phiên học của Khánh Ngọc
+                      Tổng kết kèo đấu của Khánh Ngọc
                     </div>
                     <div>
-                      Đã làm <strong>{answeredCount}</strong> câu trong phiên (đúng{' '}
-                      <strong>{accuracy}%</strong>) • Kỷ lục chuỗi đúng: <strong>{bestStreak}</strong> • Đã thuộc <strong>{masteredIds.length}</strong>/{allItems.length} bài.
+                      Đã giải <strong>{answeredCount}</strong> kèo (đúng <strong>{accuracy}%</strong>) • Kỷ lục chuỗi đúng: <strong>{bestStreak}</strong> • Đã chinh phục <strong>{masteredIds.length}</strong>/{allItems.length} bài.
                     </div>
                     <div>
                       Nhóm lỗi nổi bật nhất:{' '}
                       <strong>
-                        {dominantCategory ? ERROR_CATEGORY_LABELS[dominantCategory] : 'Chưa ghi nhận lỗi sai'}
+                        {dominantCategory
+                          ? ERROR_CATEGORY_LABELS[dominantCategory]
+                          : 'Chưa ghi nhận kèo sai'}
                       </strong>
                     </div>
                     <div>
-                      <strong>Câu hỏi mở đầu gợi ý cho bố mẹ:</strong> &ldquo;{sessionParentPrompt}&rdquo;
+                      <strong>Câu hỏi gợi mở của bố:</strong> &ldquo;{sessionParentPrompt}&rdquo;
                     </div>
                   </div>
 
@@ -1387,7 +1499,8 @@ export default function App() {
                     }}
                   >
                     <div style={{ fontWeight: 800 }}>
-                      Đồng bộ đám mây (Supabase): {syncConfig.enabled ? 'Sẵn sàng' : 'Chưa cấu hình biến môi trường'}
+                      Đồng bộ đám mây (Supabase):{' '}
+                      {syncConfig.enabled ? 'Sẵn sàng' : 'Chưa cấu hình biến môi trường'}
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button
@@ -1450,7 +1563,7 @@ export default function App() {
                       }}
                     >
                       <div style={{ fontWeight: 800, fontSize: 13 }}>
-                        Chẩn đoán lỗi sai &amp; nhật ký đồng hành
+                        Sổ kèo sai &amp; nhật ký gợi mở của bố
                       </div>
                       {mistakeList.length > 0 && (
                         <button
@@ -1472,16 +1585,16 @@ export default function App() {
                       )}
                     </div>
                     <div>
-                      Tổng lần sai: <strong>{totalWrongAttempts}</strong> • Đã gợi mở cùng con:{' '}
+                      Tổng lần vấp: <strong>{totalWrongAttempts}</strong> • Đã gợi mở cùng con:{' '}
                       <strong>
                         {coachedIds.length}/{mistakeList.length}
                       </strong>{' '}
-                      dạng • Khái niệm: <strong>{categorySummary.concept}</strong> • Bẫy/điều kiện:{' '}
+                      kèo • Khái niệm: <strong>{categorySummary.concept}</strong> • Bẫy/điều kiện:{' '}
                       <strong>{categorySummary.trap_condition}</strong> • Thao tác:{' '}
                       <strong>{categorySummary.execution}</strong>
                     </div>
                     <div>
-                      Nguyên tắc: bố mẹ dùng câu hỏi gợi mở để con tự tìm ra hướng làm, tránh làm hộ.
+                      Nguyên tắc của bố: hỏi gợi mở để con tự bật ra đáp án, tuyệt đối không làm hộ.
                     </div>
                   </div>
 
@@ -1497,7 +1610,7 @@ export default function App() {
                         color: '#475569',
                       }}
                     >
-                      Chưa có lỗi sai nào được ghi nhận. Khi Khánh Ngọc chọn sai câu nào, hệ thống sẽ tổng hợp nhóm lỗi, câu hỏi gợi mở và nút đánh dấu đã cùng con trao đổi tại đây.
+                      Chưa có kèo sai nào. Khi Khánh Ngọc lỡ sập bẫy câu nào, bố sẽ có ngay câu hỏi gợi mở tại đây để hai bố con cùng trao đổi.
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -1542,7 +1655,7 @@ export default function App() {
                                   fontWeight: 800,
                                 }}
                               >
-                                Sai {rec.wrongCount} lần
+                                Vấp {rec.wrongCount} lần
                               </span>
                             </div>
                             <div style={{ fontSize: 11, fontWeight: 700, color: '#be123c' }}>
@@ -1574,7 +1687,7 @@ export default function App() {
                                 color: '#881337',
                               }}
                             >
-                              <strong>Lỗi sai:</strong> {rec.commonMistake}
+                              <strong>Chỗ dễ vấp:</strong> {rec.commonMistake}
                             </div>
                             <div
                               style={{
@@ -1584,7 +1697,7 @@ export default function App() {
                                 color: '#1e1b4b',
                               }}
                             >
-                              <strong>Hỏi gợi mở cho con:</strong> &ldquo;{rec.guidingQuestion}&rdquo;
+                              <strong>Bố hỏi gợi mở:</strong> &ldquo;{rec.guidingQuestion}&rdquo;
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
                               <button
@@ -1601,7 +1714,7 @@ export default function App() {
                                   cursor: 'pointer',
                                 }}
                               >
-                                {coached ? 'Đã cùng con gợi mở ✓' : 'Đánh dấu đã gợi mở'}
+                                {coached ? 'Bố con đã cùng gỡ kèo ✓' : 'Đánh dấu đã gợi mở'}
                               </button>
                             </div>
                           </div>
@@ -1621,6 +1734,7 @@ export default function App() {
         onClose={() => setPunchOpen(false)}
         mistakeNote={current.commonMistake}
         guidingQuestion={current.parentGuide?.guidingQuestion ?? ''}
+        hints={current.hints}
         topic={current.topic}
       />
     </div>

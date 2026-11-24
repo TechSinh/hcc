@@ -17,6 +17,7 @@ export interface LearningItem {
   id: string;
   subject: Subject;
   topic: string;
+  weekSpan: number; // Mốc tuần học tích lũy (<= 16 tuần cho các kèo cốt lõi)
   sourceRef: string;
   phaseOneCheck: string;
   phaseOneQuickCheck: PhaseOneQuickCheck;
@@ -44,6 +45,7 @@ export interface ExamFormulaCard {
   id: string;
   subject: Subject;
   topic: string;
+  weekSpan: number;
   weightNote: string;
   coreFormula: string;
   transitionTip: string;
@@ -60,7 +62,8 @@ export const EXAM_FORMULA_CARDS: ExamFormulaCard[] = [
     id: 'fm-can',
     subject: 'toan',
     topic: 'Căn thức bậc hai & bất phương trình',
-    weightNote: 'Thường chiếm ~15% - 17,5% điểm đề thi thử vào 10',
+    weekSpan: 12,
+    weightNote: 'Mốc 12 tuần • Trọng tâm nền tảng vào lớp 10',
     coreFormula: 'Căn(A) xác định khi A >= 0; chia cho số âm thì đổi chiều bất đẳng thức.',
     transitionTip: 'Lên cấp 3 luôn phải đặt điều kiện xác định trước mọi phép biến đổi.',
   },
@@ -68,7 +71,8 @@ export const EXAM_FORMULA_CARDS: ExamFormulaCard[] = [
     id: 'fm-hpt',
     subject: 'toan',
     topic: 'Giải bài toán bằng cách lập PT / hệ PT',
-    weightNote: 'Thường chiếm ~10% điểm tự luận thực tế',
+    weekSpan: 6,
+    weightNote: 'Mốc 6 tuần • Trọng tâm chương đầu Lớp 9',
     coreFormula: 'Gọi ẩn kèm đơn vị & điều kiện -> lập 2 phương trình theo 2 đại lượng -> đối chiếu nghiệm.',
     transitionTip: 'Rèn thói quen mô hình hóa bài toán thực tế thành phương trình/hệ phương trình.',
   },
@@ -76,7 +80,8 @@ export const EXAM_FORMULA_CARDS: ExamFormulaCard[] = [
     id: 'fm-xs',
     subject: 'toan',
     topic: 'Thống kê & Xác suất biến cố',
-    weightNote: 'Thường chiếm ~10% - 15% tổng điểm',
+    weekSpan: 16,
+    weightNote: 'Mốc 16 tuần • Rèn đếm kết quả thuận lợi & không gian mẫu',
     coreFormula: 'P(A) = n(A) / n(Omega); chú ý số 1 không phải là số nguyên tố.',
     transitionTip: 'Đếm chính xác không gian mẫu giúp tránh mất điểm ở các câu xác suất cấp 3.',
   },
@@ -84,7 +89,8 @@ export const EXAM_FORMULA_CARDS: ExamFormulaCard[] = [
     id: 'fm-hh',
     subject: 'toan',
     topic: 'Hình phẳng & Hình khối thực tiễn',
-    weightNote: 'Thường chiếm ~20% - 35% tổng hợp',
+    weekSpan: 18,
+    weightNote: 'Mốc mở rộng sau 16 tuần • Dành khi học tới phần này',
     coreFormula: 'S_vanh_khuyen = pi * (R1^2 - R2^2); S_xq_tru = 2 * pi * r * h.',
     transitionTip: 'Vẽ hình đúng, phân biệt rõ bán kính và đường kính trước khi áp dụng công thức.',
   },
@@ -92,7 +98,8 @@ export const EXAM_FORMULA_CARDS: ExamFormulaCard[] = [
     id: 'fm-van-nlxh',
     subject: 'van',
     topic: 'Nghị luận xã hội lớp 9: Giải pháp hành động',
-    weightNote: 'Trọng tâm rèn kỹ năng viết đoạn/bài nghị luận xã hội theo định hướng mới',
+    weekSpan: 10,
+    weightNote: 'Mốc 10 tuần • Trọng tâm kỹ năng viết nghị luận xã hội',
     coreFormula: 'Giải pháp thuyết phục = Đổi nhận thức + Hành động hằng ngày cụ thể + Kiểm soát cám dỗ.',
     transitionTip: 'Lên cấp 3 viết nghị luận cần lập luận chặt chẽ, dẫn chứng thực tế và tránh sáo rỗng.',
   },
@@ -100,7 +107,8 @@ export const EXAM_FORMULA_CARDS: ExamFormulaCard[] = [
     id: 'fm-van-dh',
     subject: 'van',
     topic: 'Đọc hiểu & Nghị luận văn học lớp 9',
-    weightNote: 'Rèn bám ngữ liệu, làm rõ hình ảnh/biện pháp tu từ và thông điệp',
+    weekSpan: 16,
+    weightNote: 'Mốc 16 tuần • Bám ngữ liệu, luận điểm & dẫn chứng',
     coreFormula: 'Đọc hiểu: Chỉ đúng từ ngữ/hình ảnh trong ngữ liệu -> Nêu tác dụng -> Rút ra thông điệp.',
     transitionTip: 'Giữ thói quen đọc kỹ câu hỏi, trả lời đúng trọng tâm và có dẫn chứng chuẩn xác.',
   },
@@ -111,7 +119,8 @@ export const CORE_SEED_ITEMS: LearningItem[] = [
     id: 'toan9-pt-01',
     subject: 'toan',
     topic: 'Phương trình bậc nhất hai ẩn',
-    sourceRef: 'Đề ôn chương 1 - Đề 1 - TN Câu 3',
+    weekSpan: 2,
+    sourceRef: 'Tuần 1-2 • Đề ôn chương 1 - Đề 1 - TN Câu 3',
     phaseOneCheck: 'Xác định tọa độ (x; y) của từng cặp số và thay đúng vị trí vào 2x - y - 1.',
     phaseOneQuickCheck: {
       question: 'Với cặp số (1; 1), giá trị nào được thay vào x và y?',
@@ -136,7 +145,8 @@ export const CORE_SEED_ITEMS: LearningItem[] = [
     id: 'toan9-hpt-02',
     subject: 'toan',
     topic: 'Hệ phương trình thực tế',
-    sourceRef: 'Đề ôn chương 1 - Đề 2 - TN Câu 11',
+    weekSpan: 6,
+    sourceRef: 'Tuần 5-6 • Đề ôn chương 1 - Đề 2 - TN Câu 11',
     phaseOneCheck: 'Tách riêng 2 đại lượng ở đề bài: tổng số con (36) và tổng số chân (100).',
     phaseOneQuickCheck: {
       question: 'Phương trình biểu diễn tổng số chân gà (2 chân/con) và chó (4 chân/con) là gì?',
@@ -167,7 +177,8 @@ export const CORE_SEED_ITEMS: LearningItem[] = [
     id: 'toan9-can-03',
     subject: 'toan',
     topic: 'Điều kiện xác định căn thức',
-    sourceRef: 'Đề ôn chương 3 - Đề 1 - TN Câu 5',
+    weekSpan: 12,
+    sourceRef: 'Tuần 11-12 • Đề ôn chương 3 - Đề 1 - TN Câu 5',
     phaseOneCheck: 'Đặt biểu thức dưới căn >= 0, sau đó chú ý dấu của hệ số nhân với x khi chuyển vế.',
     phaseOneQuickCheck: {
       question: 'Bất phương trình điều kiện xác định của căn(-12x + 5) là gì?',
@@ -192,7 +203,8 @@ export const CORE_SEED_ITEMS: LearningItem[] = [
     id: 'toan9-xs-04',
     subject: 'toan',
     topic: 'Xác suất đơn giản',
-    sourceRef: 'Đề thi thử vào 10 (Giao Thanh) - TN Câu 7',
+    weekSpan: 16,
+    sourceRef: 'Tuần 15-16 • Đề thi thử vào 10 (Giao Thanh) - TN Câu 7',
     phaseOneCheck: 'Liệt kê đủ 6 kết quả của xúc xắc và kiểm tra tính nguyên tố của từng số.',
     phaseOneQuickCheck: {
       question: 'Trong các mặt từ 1 đến 6 của xúc xắc, những mặt nào là số nguyên tố?',
@@ -218,7 +230,8 @@ export const CORE_SEED_ITEMS: LearningItem[] = [
     id: 'toan9-pt-08',
     subject: 'toan',
     topic: 'Phương trình bậc nhất hai ẩn',
-    sourceRef: 'Đề ôn chương 1 - Kiểm tra nhận biết nghiệm',
+    weekSpan: 3,
+    sourceRef: 'Tuần 2-3 • Đề ôn chương 1 - Kiểm tra nhận biết nghiệm',
     phaseOneCheck: 'Thay cả hoành độ x và tung độ y vào biểu thức vế trái, kiểm tra kết quả có bằng 0 không.',
     phaseOneQuickCheck: {
       question: 'Muốn kiểm tra cặp số (x0; y0) có là nghiệm của phương trình hay không ta làm gì?',
@@ -247,7 +260,8 @@ export const CORE_SEED_ITEMS: LearningItem[] = [
     id: 'van9-nlxh-01',
     subject: 'van',
     topic: 'Nghị luận xã hội: Giải pháp',
-    sourceRef: 'Cẩm nang Ngữ văn lớp 9 - Nghị luận xã hội',
+    weekSpan: 10,
+    sourceRef: 'Tuần 9-10 • Cẩm nang Ngữ văn lớp 9 - Nghị luận xã hội',
     phaseOneCheck: 'Nhận diện đúng trọng tâm "giải pháp" và kiểm tra tính cụ thể, không viết khẩu hiệu suông.',
     phaseOneQuickCheck: {
       question: 'Một giải pháp tốt trong nghị luận xã hội cần có yếu tố nào?',
@@ -282,7 +296,8 @@ export const CORE_SEED_ITEMS: LearningItem[] = [
     id: 'van9-dh-02',
     subject: 'van',
     topic: 'Đọc hiểu: Bám ngữ liệu & ý nghĩa',
-    sourceRef: 'Cẩm nang Ngữ văn lớp 9 - Đọc hiểu',
+    weekSpan: 6,
+    sourceRef: 'Tuần 5-6 • Cẩm nang Ngữ văn lớp 9 - Đọc hiểu',
     phaseOneCheck: 'Quay lại đối chiếu trực tiếp từ ngữ/hình ảnh trong ngữ liệu trước khi nhận xét ý nghĩa.',
     phaseOneQuickCheck: {
       question: 'Khi làm câu hỏi Đọc hiểu về hình ảnh hoặc biện pháp tu từ, bước đầu là gì?',
@@ -317,7 +332,8 @@ export const CORE_SEED_ITEMS: LearningItem[] = [
     id: 'van9-nlvh-03',
     subject: 'van',
     topic: 'Nghị luận văn học: Bám chủ đề & luận điểm',
-    sourceRef: 'Cẩm nang Ngữ văn lớp 9 - Nghị luận văn học',
+    weekSpan: 14,
+    sourceRef: 'Tuần 13-14 • Cẩm nang Ngữ văn lớp 9 - Nghị luận văn học',
     phaseOneCheck: 'Phân biệt giữa "kể lại sự việc" và "lập luận phân tích gắn dẫn chứng làm rõ vấn đề".',
     phaseOneQuickCheck: {
       question: 'Nghị luận văn học cần tránh lỗi nào phổ biến nhất?',
@@ -352,7 +368,8 @@ export const CORE_SEED_ITEMS: LearningItem[] = [
     id: 'van9-on-04',
     subject: 'van',
     topic: 'Ôn tập tổng hợp: Phân bổ thời gian làm bài',
-    sourceRef: 'Cẩm nang Ngữ văn lớp 9 - Phương pháp ôn luyện',
+    weekSpan: 16,
+    sourceRef: 'Tuần 15-16 • Cẩm nang Ngữ văn lớp 9 - Phương pháp ôn luyện',
     phaseOneCheck: 'Đánh giá tính bền vững của phương pháp ôn luyện thay vì dựa vào học tủ.',
     phaseOneQuickCheck: {
       question: 'Vì sao ôn Ngữ văn lớp 9 không nên học tủ theo văn mẫu?',
@@ -390,7 +407,8 @@ export const EXTRA_MOCK_EXAM_ITEMS: LearningItem[] = [
     id: 'toan9-xs-05',
     subject: 'toan',
     topic: 'Không gian mẫu phép thử',
-    sourceRef: 'Đề thi thử vào 10 (Bình Hòa) - TN Câu 7',
+    weekSpan: 16,
+    sourceRef: 'Tuần 16 • Đề thi thử vào 10 (Bình Hòa) - TN Câu 7',
     phaseOneCheck: 'Xác định phép thử là gieo 1 xúc xắc 1 lần và đếm toàn bộ kết quả có thể xảy ra.',
     phaseOneQuickCheck: {
       question: 'Các mặt có thể xuất hiện khi gieo 1 xúc xắc 1 lần gồm những số nào?',
@@ -416,7 +434,8 @@ export const EXTRA_MOCK_EXAM_ITEMS: LearningItem[] = [
     id: 'toan9-hh-06',
     subject: 'toan',
     topic: 'Hình vành khuyên',
-    sourceRef: 'Đề thi thử vào 10 (Giao Lạc) - Công thức chuẩn',
+    weekSpan: 18,
+    sourceRef: 'Mở rộng sau 16 tuần • Đề thi thử vào 10 (Giao Lạc)',
     phaseOneCheck: 'Kiểm tra bán kính R1, R2 (nếu cho đường kính thì chia 2) và phép trừ diện tích hai hình tròn.',
     phaseOneQuickCheck: {
       question: 'Diện tích hình vành khuyên được tính bằng cách nào từ 2 đường tròn bán kính R1 > R2?',
@@ -451,7 +470,8 @@ export const EXTRA_MOCK_EXAM_ITEMS: LearningItem[] = [
     id: 'toan9-hh-07',
     subject: 'toan',
     topic: 'Hình trụ trong thực tiễn',
-    sourceRef: 'Đề thi thử vào 10 (Giao Thiện / Hồng Thuận) - Công thức chuẩn',
+    weekSpan: 19,
+    sourceRef: 'Mở rộng sau 16 tuần • Đề thi thử vào 10 (Giao Thiện / Hồng Thuận)',
     phaseOneCheck: 'Phân biệt rõ "diện tích xung quanh" (chu vi đáy nhân chiều cao) với "thể tích".',
     phaseOneQuickCheck: {
       question: 'Diện tích xung quanh hình trụ được tính từ đại lượng nào của đáy?',
