@@ -1,6 +1,66 @@
 import { LearningItem } from '../types/learning';
 
-export const SEED_ITEMS: LearningItem[] = [
+export interface ExamFormulaCard {
+  id: string;
+  subject: 'toan' | 'van';
+  topic: string;
+  weightNote: string;
+  coreFormula: string;
+  transitionTip: string;
+}
+
+export const EXAM_FORMULA_CARDS: ExamFormulaCard[] = [
+  {
+    id: 'fm-can',
+    subject: 'toan',
+    topic: 'Căn thức bậc hai & bất phương trình',
+    weightNote: 'Thường chiếm ~15% - 17,5% điểm đề thi thử vào 10',
+    coreFormula: 'Căn(A) xác định khi A >= 0; chia cho số âm thì đổi chiều bất đẳng thức.',
+    transitionTip: 'Lên cấp 3 luôn phải đặt điều kiện xác định trước mọi phép biến đổi.'
+  },
+  {
+    id: 'fm-hpt',
+    subject: 'toan',
+    topic: 'Giải bài toán bằng cách lập PT / hệ PT',
+    weightNote: 'Thường chiếm ~10% điểm tự luận thực tế',
+    coreFormula: 'Gọi ẩn kèm đơn vị & điều kiện -> lập 2 phương trình theo 2 đại lượng -> đối chiếu nghiệm.',
+    transitionTip: 'Rèn thói quen mô hình hóa bài toán thực tế thành phương trình/hệ phương trình.'
+  },
+  {
+    id: 'fm-xs',
+    subject: 'toan',
+    topic: 'Thống kê & Xác suất biến cố',
+    weightNote: 'Thường chiếm ~10% - 15% tổng điểm',
+    coreFormula: 'P(A) = n(A) / n(Omega); chú ý số 1 không phải là số nguyên tố.',
+    transitionTip: 'Đếm chính xác không gian mẫu giúp tránh mất điểm ở các câu xác suất cấp 3.'
+  },
+  {
+    id: 'fm-hh',
+    subject: 'toan',
+    topic: 'Hình phẳng & Hình khối thực tiễn',
+    weightNote: 'Thường chiếm ~20% - 35% tổng hợp',
+    coreFormula: 'S_vanh_khuyen = pi * (R1^2 - R2^2); S_xq_tru = 2 * pi * r * h.',
+    transitionTip: 'Vẽ hình đúng, phân biệt rõ bán kính và đường kính trước khi áp dụng công thức.'
+  },
+  {
+    id: 'fm-van-nlxh',
+    subject: 'van',
+    topic: 'Nghị luận xã hội lớp 9: Giải pháp hành động',
+    weightNote: 'Trọng tâm rèn kỹ năng viết đoạn/bài nghị luận xã hội theo định hướng mới',
+    coreFormula: 'Giải pháp thuyết phục = Đổi nhận thức + Hành động hằng ngày cụ thể + Kiểm soát cám dỗ.',
+    transitionTip: 'Lên cấp 3 viết nghị luận cần lập luận chặt chẽ, dẫn chứng thực tế và tránh sáo rỗng.'
+  },
+  {
+    id: 'fm-van-dh',
+    subject: 'van',
+    topic: 'Đọc hiểu & Nghị luận văn học lớp 9',
+    weightNote: 'Rèn bám ngữ liệu, làm rõ hình ảnh/biện pháp tu từ và thông điệp',
+    coreFormula: 'Đọc hiểu: Chỉ đúng từ ngữ/hình ảnh trong ngữ liệu -> Nêu tác dụng -> Rút ra thông điệp.',
+    transitionTip: 'Giữ thói quen đọc kỹ câu hỏi, trả lời đúng trọng tâm và có dẫn chứng chuẩn xác.'
+  }
+];
+
+export const CORE_SEED_ITEMS: LearningItem[] = [
   {
     id: 'toan9-pt-01',
     subject: 'toan',
@@ -81,25 +141,6 @@ export const SEED_ITEMS: LearningItem[] = [
     }
   },
   {
-    id: 'toan9-xs-05',
-    subject: 'toan',
-    topic: 'Không gian mẫu phép thử',
-    sourceRef: 'Đề thi thử vào 10 (Bình Hòa) - TN Câu 7',
-    prompt:
-      'Gieo một con xúc xắc cân đối đồng chất một lần. Không gian mẫu của phép thử có số phần tử là bao nhiêu?',
-    options: ['4', '5', '6', '7'],
-    correctAnswer: '6',
-    hints: [
-      'Một con xúc xắc thông thường có 6 mặt đánh số từ 1 đến 6.',
-      'Mỗi lần gieo 1 lần có thể cho ra 1 trong 6 mặt này.'
-    ],
-    commonMistake: 'Nhầm lẫn giữa số chấm lớn nhất (6) với số phần tử hoặc đếm thiếu mặt.',
-    parentGuide: {
-      keyConcept: 'Không gian mẫu là tập hợp tất cả các kết quả có thể xảy ra của phép thử.',
-      guidingQuestion: 'Gieo một con xúc xắc 1 lần thì có thể ra những mặt nào?'
-    }
-  },
-  {
     id: 'van9-nlxh-01',
     subject: 'van',
     topic: 'Nghị luận xã hội: Giải pháp',
@@ -146,5 +187,125 @@ export const SEED_ITEMS: LearningItem[] = [
       keyConcept: 'Bám sát ngữ liệu -> nêu tác dụng/ý nghĩa -> liên hệ thông điệp đúng trọng tâm câu hỏi.',
       guidingQuestion: 'Con hãy chỉ cho bố/mẹ từ ngữ hoặc hình ảnh nào trong đoạn trích làm nổi bật ý này?'
     }
+  },
+  {
+    id: 'van9-nlvh-03',
+    subject: 'van',
+    topic: 'Nghị luận văn học: Bám chủ đề & luận điểm',
+    sourceRef: 'Cẩm nang Ngữ văn lớp 9 - Nghị luận văn học',
+    prompt:
+      'Khi viết đoạn/bài nghị luận văn học lớp 9, điều nào giúp lập luận chặt chẽ và không bị lan man, kể lể sự việc?',
+    options: [
+      'Kể tóm tắt toàn bộ cốt truyện từ đầu đến cuối rồi mới thêm vài câu cảm nhận',
+      'Xác định rõ vấn đề nghị luận, triển khai luận điểm sáng rõ và bám sát dẫn chứng trong tác phẩm',
+      'Dùng thật nhiều từ ngữ hoa mỹ nhưng không trả lời thẳng trọng tâm đề bài',
+      'Chỉ nêu cảm xúc cá nhân mà không dẫn chi tiết từ tác phẩm'
+    ],
+    correctAnswer: 'Xác định rõ vấn đề nghị luận, triển khai luận điểm sáng rõ và bám sát dẫn chứng trong tác phẩm',
+    hints: [
+      'Nghị luận văn học cần phân tích, đánh giá chứ không kể lại cốt truyện thay cho lập luận.',
+      'Mỗi luận điểm nên gắn với dẫn chứng phù hợp và quay về làm rõ vấn đề đề bài yêu cầu.'
+    ],
+    commonMistake: 'Kể lể sự việc dài dòng thay vì phân tích, hoặc đưa dẫn chứng rời rạc thiếu nhận xét.',
+    parentGuide: {
+      keyConcept: 'Luận điểm rõ ràng + dẫn chứng đúng chỗ + phân tích gắn với chủ đề/ý nghĩa tác phẩm.',
+      guidingQuestion: 'Vấn đề chính đề bài yêu cầu làm sáng tỏ là gì, và chi tiết nào trong bài chứng minh rõ nhất?'
+    }
+  },
+  {
+    id: 'van9-on-04',
+    subject: 'van',
+    topic: 'Ôn tập tổng hợp: Phân bổ thời gian làm bài',
+    sourceRef: 'Cẩm nang Ngữ văn lớp 9 - Phương pháp ôn luyện',
+    prompt:
+      'Trong quá trình ôn luyện Ngữ văn lớp 9 chuẩn bị thi vào lớp 10, cách rèn luyện nào giúp học sinh giữ sự chủ động và tránh học tủ?',
+    options: [
+      'Chỉ học thuộc lòng vài đoạn mẫu có sẵn rồi áp dụng máy móc cho mọi đề',
+      'Rèn vững kỹ năng đọc hiểu, dàn ý từng dạng nghị luận và tự kiểm soát lỗi diễn đạt qua từng bài luyện',
+      'Bỏ qua phần luyện viết đoạn/bài vì chỉ cần nhớ ý chính',
+      'Làm đề dồn dập sát ngày thi mà không rà lại lỗi sai cũ'
+    ],
+    correctAnswer: 'Rèn vững kỹ năng đọc hiểu, dàn ý từng dạng nghị luận và tự kiểm soát lỗi diễn đạt qua từng bài luyện',
+    hints: [
+      'Học tủ dễ mất điểm khi ngữ liệu hoặc câu hỏi đổi góc tiếp cận.',
+      'Nắm chắc thao tác làm bài giúp học sinh tự xử lý được nhiều dạng đề khác nhau.'
+    ],
+    commonMistake: 'Học tủ, viết vội thiếu kiểm soát lỗi diễn đạt và lặp từ.',
+    parentGuide: {
+      keyConcept: 'Nắm phương pháp làm bài từng dạng + tự rà soát lỗi diễn đạt để ứng biến linh hoạt.',
+      guidingQuestion: 'Sau khi làm xong một phần luyện tập, con thường tự kiểm tra lại ý nào trước tiên?'
+    }
   }
 ];
+
+export const EXTRA_MOCK_EXAM_ITEMS: LearningItem[] = [
+  {
+    id: 'toan9-xs-05',
+    subject: 'toan',
+    topic: 'Không gian mẫu phép thử',
+    sourceRef: 'Đề thi thử vào 10 (Bình Hòa) - TN Câu 7',
+    prompt:
+      'Gieo một con xúc xắc cân đối đồng chất một lần. Không gian mẫu của phép thử có số phần tử là bao nhiêu?',
+    options: ['4', '5', '6', '7'],
+    correctAnswer: '6',
+    hints: [
+      'Một con xúc xắc thông thường có 6 mặt đánh số từ 1 đến 6.',
+      'Mỗi lần gieo 1 lần có thể cho ra 1 trong 6 mặt này.'
+    ],
+    commonMistake: 'Nhầm lẫn giữa số chấm lớn nhất (6) với số phần tử hoặc đếm thiếu mặt.',
+    parentGuide: {
+      keyConcept: 'Không gian mẫu là tập hợp tất cả các kết quả có thể xảy ra của phép thử.',
+      guidingQuestion: 'Gieo một con xúc xắc 1 lần thì có thể ra những mặt nào?'
+    }
+  },
+  {
+    id: 'toan9-hh-06',
+    subject: 'toan',
+    topic: 'Hình vành khuyên',
+    sourceRef: 'Đề thi thử vào 10 (Giao Lạc) - Công thức chuẩn',
+    prompt:
+      'Với hình vành khuyên giới hạn bởi hai đường tròn có bán kính R1 > R2, công thức tính diện tích hình vành khuyên là gì?',
+    options: [
+      'S = pi * (R1 + R2)',
+      'S = pi * (R1^2 - R2^2)',
+      'S = 2 * pi * (R1 - R2)',
+      'S = pi * (R1 - R2)^2'
+    ],
+    correctAnswer: 'S = pi * (R1^2 - R2^2)',
+    hints: [
+      'Diện tích hình vành khuyên bằng diện tích hình tròn lớn trừ diện tích hình tròn nhỏ.',
+      'Diện tích mỗi hình tròn là pi * R^2, nhớ đổi từ đường kính sang bán kính trước khi bình phương.'
+    ],
+    commonMistake: 'Lấy hiệu bình phương nhầm thành bình phương của hiệu (R1 - R2)^2 hoặc quên chia 2 khi đề cho đường kính.',
+    parentGuide: {
+      keyConcept: 'S_vanh_khuyen = pi * (R1^2 - R2^2); nếu đề cho đường kính d thì r = d / 2.',
+      guidingQuestion: 'Nếu đề cho đường kính đáy thì trước tiên con phải tìm bán kính bằng phép tính nào?'
+    }
+  },
+  {
+    id: 'toan9-hh-07',
+    subject: 'toan',
+    topic: 'Hình trụ trong thực tiễn',
+    sourceRef: 'Đề thi thử vào 10 (Giao Thiện / Hồng Thuận) - Công thức chuẩn',
+    prompt:
+      'Một hình trụ có bán kính đáy r và chiều cao h. Công thức tính diện tích xung quanh của hình trụ là gì?',
+    options: [
+      'S_xq = pi * r^2 * h',
+      'S_xq = 2 * pi * r * h',
+      'S_xq = (1/3) * pi * r^2 * h',
+      'S_xq = 4 * pi * r^2'
+    ],
+    correctAnswer: 'S_xq = 2 * pi * r * h',
+    hints: [
+      'Diện tích xung quanh hình trụ bằng chu vi đáy nhân với chiều cao.',
+      'Chu vi hình tròn bán kính r là 2 * pi * r.'
+    ],
+    commonMistake: 'Nhầm công thức diện tích xung quanh (2 * pi * r * h) với thể tích hình trụ (pi * r^2 * h).',
+    parentGuide: {
+      keyConcept: 'S_xq = chu vi đáy * chiều cao = 2 * pi * r * h.',
+      guidingQuestion: 'Chu vi đáy hình tròn bán kính r là gì, và nhân với chiều cao h ta được công thức nào?'
+    }
+  }
+];
+
+export const SEED_ITEMS: LearningItem[] = [...CORE_SEED_ITEMS, ...EXTRA_MOCK_EXAM_ITEMS];

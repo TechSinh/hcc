@@ -1,12 +1,32 @@
-import React, { useMemo, useState } from 'react';
-import { SEED_ITEMS } from './data/seedQuestions';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  CORE_SEED_ITEMS,
+  EXAM_FORMULA_CARDS,
+  EXTRA_MOCK_EXAM_ITEMS
+} from './data/seedQuestions';
 import { LearningItem, MistakeRecord, Subject } from './types/learning';
 import { SpringPunchModal } from './components/SpringPunchModal';
+
+const MISTAKE_STORAGE_KEY = 'hcc_l9_mistakes_v5';
+const EXTRA_PACK_STORAGE_KEY = 'hcc_l9_extra_pack_v5';
 
 export default function App() {
   const [subject, setSubject] = useState<Subject>('toan');
   const [reviewWrongOnly, setReviewWrongOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState<'play' | 'parent'>('play');
+  const [activeTab, setActiveTab] = useState<'play' | 'formulas' | 'parent'>('play');
+
+  const [extraPackLoaded, setExtraPackLoaded] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(EXTRA_PACK_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const allItems = useMemo<LearningItem[]>(
+    () => (extraPackLoaded ? [...CORE_SEED_ITEMS, ...EXTRA_MOCK_EXAM_ITEMS] : CORE_SEED_ITEMS),
+    [extraPackLoaded]
+  );
 
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -16,11 +36,40 @@ export default function App() {
   const [punchEnabled, setPunchEnabled] = useState(true);
   const [showParentInline, setShowParentInline] = useState(false);
 
-  const [wrongIds, setWrongIds] = useState<string[]>([]);
-  const [mistakeMap, setMistakeMap] = useState<Record<string, MistakeRecord>>({});
+  const [mistakeMap, setMistakeMap] = useState<Record<string, MistakeRecord>>(() => {
+    try {
+      const raw = localStorage.getItem(MISTAKE_STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as Record<string, MistakeRecord>) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(MISTAKE_STORAGE_KEY, JSON.stringify(mistakeMap));
+    } catch {
+      // Bỏ qua khi không có quyền lưu trữ cục bộ
+    }
+  }, [mistakeMap]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(EXTRA_PACK_STORAGE_KEY, String(extraPackLoaded));
+    } catch {
+      // Bỏ qua khi không có quyền lưu trữ cục bộ
+    }
+  }, [extraPackLoaded]);
+
+  const wrongIds = useMemo(() => Object.keys(mistakeMap), [mistakeMap]);
 
   const subjectItems = useMemo(
-    () => SEED_ITEMS.filter((item) => item.subject === subject),
+    () => allItems.filter((item) => item.subject === subject),
+    [allItems, subject]
+  );
+
+  const subjectFormulaCards = useMemo(
+    () => EXAM_FORMULA_CARDS.filter((card) => card.subject === subject),
     [subject]
   );
 
@@ -52,13 +101,8 @@ export default function App() {
 
   const handleSelectOption = (opt: string) => {
     setSelected(opt);
+    if (opt === current.correctAnswer) return;
 
-    if (opt === current.correctAnswer) {
-      setWrongIds((prev) => prev.filter((id) => id !== current.id));
-      return;
-    }
-
-    setWrongIds((prev) => (prev.includes(current.id) ? prev : [...prev, current.id]));
     setMistakeMap((prev) => {
       const existing = prev[current.id];
       return {
@@ -78,6 +122,13 @@ export default function App() {
     if (punchEnabled) {
       setPunchOpen(true);
     }
+  };
+
+  const handleResetMistakes = () => {
+    setMistakeMap({});
+    setReviewWrongOnly(false);
+    setIndex(0);
+    resetQuestionState();
   };
 
   const handleNext = () => {
@@ -108,7 +159,7 @@ export default function App() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           <button
             type="button"
             onClick={() => setActiveTab('play')}
@@ -118,7 +169,18 @@ export default function App() {
                 : 'bg-slate-100 text-slate-700'
             }`}
           >
-            Chơi & Luyện tập
+            Luyện tập
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('formulas')}
+            className={`rounded-xl py-2 text-xs font-bold ${
+              activeTab === 'formulas'
+                ? 'bg-blue-700 text-white'
+                : 'bg-blue-50 text-blue-800'
+            }`}
+          >
+            Đề & Công thức
           </button>
           <button
             type="button"
@@ -129,41 +191,41 @@ export default function App() {
                 : 'bg-indigo-50 text-indigo-800'
             }`}
           >
-            Góc phụ huynh ({totalWrongAttempts} lỗi)
+            Phụ huynh ({totalWrongAttempts})
           </button>
         </div>
 
-        {activeTab === 'play' ? (
-          <>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleSwitchSubject('toan')}
-                className={`rounded-xl py-2 text-xs font-semibold ${
-                  subject === 'toan'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700'
-                }`}
-              >
-                Toán 9
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSwitchSubject('van')}
-                className={`rounded-xl py-2 text-xs font-semibold ${
-                  subject === 'van'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 text-slate-700'
-                }`}
-              >
-                Ngữ văn 9
-              </button>
-            </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => handleSwitchSubject('toan')}
+            className={`rounded-xl py-2 text-xs font-semibold ${
+              subject === 'toan'
+                ? 'bg-blue-600 text-white'
+                : 'bg-slate-100 text-slate-700'
+            }`}
+          >
+            Toán 9
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSwitchSubject('van')}
+            className={`rounded-xl py-2 text-xs font-semibold ${
+              subject === 'van'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-slate-100 text-slate-700'
+            }`}
+          >
+            Ngữ văn 9
+          </button>
+        </div>
 
+        {activeTab === 'play' && (
+          <>
             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs border border-slate-200">
               <span className="text-slate-600">
                 Câu {(index % poolItems.length) + 1}/{poolItems.length}
-                {reviewWrongOnly ? ' (Đang ôn câu sai)' : ''}
+                {reviewWrongOnly ? ' (Ôn câu sai)' : ''}
               </span>
               <button
                 type="button"
@@ -174,7 +236,7 @@ export default function App() {
                     : 'bg-rose-50 text-rose-700 border border-rose-200'
                 }`}
               >
-                {reviewWrongOnly ? 'Thoát ôn câu sai' : `Ôn câu sai (${wrongIds.length})`}
+                {reviewWrongOnly ? 'Thoát ôn sai' : `Ôn câu sai (${wrongIds.length})`}
               </button>
             </div>
 
@@ -267,10 +329,66 @@ export default function App() {
               Câu tiếp theo →
             </button>
           </>
-        ) : (
+        )}
+
+        {activeTab === 'formulas' && (
+          <div className="space-y-2.5 text-xs">
+            {subject === 'toan' && (
+              <div className="rounded-2xl bg-blue-50 p-3.5 border border-blue-200 text-blue-950 space-y-2">
+                <div className="font-bold text-sm">Gói đề thi thử vào 10 môn Toán</div>
+                <div>
+                  Gói câu hỏi đề thi thử bổ sung ({EXTRA_MOCK_EXAM_ITEMS.length} câu đã kiểm chứng):{' '}
+                  <strong>{extraPackLoaded ? 'Đã nạp vào bộ luyện tập' : 'Chưa nạp'}</strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExtraPackLoaded((prev) => !prev);
+                    setIndex(0);
+                    resetQuestionState();
+                  }}
+                  className="w-full rounded-xl bg-blue-700 py-2.5 text-xs font-semibold text-white active:scale-95"
+                >
+                  {extraPackLoaded
+                    ? 'Gỡ gói câu hỏi đề thi thử bổ sung'
+                    : 'Nạp ngay gói câu hỏi đề thi thử bổ sung'}
+                </button>
+              </div>
+            )}
+
+            {subjectFormulaCards.map((card) => (
+              <div
+                key={card.id}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-3 space-y-1.5"
+              >
+                <div className="font-bold text-slate-900">{card.topic}</div>
+                <div className="text-[11px] text-slate-500">{card.weightNote}</div>
+                <div className="rounded-lg bg-white p-2 text-slate-800 border border-slate-200">
+                  <strong>Công thức / Quy tắc:</strong> {card.coreFormula}
+                </div>
+                <div className="rounded-lg bg-amber-50 p-2 text-amber-950">
+                  <strong>Chuẩn bị lên cấp 3:</strong> {card.transitionTip}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'parent' && (
           <div className="space-y-3">
-            <div className="rounded-2xl bg-indigo-50 p-3.5 border border-indigo-200 text-xs text-indigo-950 space-y-1">
-              <div className="font-bold text-sm">Bảng thống kê lỗi sai & đồng hành cùng con</div>
+            <div className="rounded-2xl bg-indigo-50 p-3.5 border border-indigo-200 text-xs text-indigo-950 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-bold text-sm">Bảng thống kê lỗi sai & đồng hành</div>
+                {mistakeList.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleResetMistakes}
+                    className="rounded-lg border border-indigo-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-indigo-900 active:scale-95"
+                  >
+                    Đặt lại
+                  </button>
+                )}
+              </div>
               <div>
                 Tổng số lần làm sai ghi nhận: <strong>{totalWrongAttempts}</strong> ({mistakeList.length} dạng/câu)
               </div>
@@ -281,7 +399,7 @@ export default function App() {
 
             {mistakeList.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-600">
-                Chưa có lỗi sai nào được ghi nhận trong phiên này. Khi Khánh Ngọc chọn sai câu nào, hệ thống sẽ tổng hợp ngay tại đây.
+                Chưa có lỗi sai nào được ghi nhận. Khi Khánh Ngọc chọn sai câu nào, hệ thống sẽ tự lưu và tổng hợp tại đây.
               </div>
             ) : (
               <div className="space-y-2.5">
