@@ -1,4 +1,5 @@
-﻿export type Subject = 'toan' | 'van';
+﻿import { WEEK_1_TO_16_STAGE_1_ITEMS } from './week1To16StageItems';
+export type Subject = 'toan' | 'van';
 
 export type ErrorCategory = 'concept' | 'trap_condition' | 'execution';
 

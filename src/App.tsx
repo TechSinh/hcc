@@ -44,32 +44,122 @@ const DAD_BANTER_MISS_LINES: string[] = [
   'Bố bắt được một manh mối nhỏ rồi nè—thử hỏi gợi ý xem con tự bật ra không!',
 ];
 
-const FALLBACK_ITEM: LearningItem = {
-  id: 'fallback-toan9-01',
-  subject: 'toan',
-  topic: 'Phương trình bậc nhất hai ẩn',
-  weekSpan: 2,
-  sourceRef: 'Tuần 1-2 • Đề ôn chương 1 - Đề 1 - TN Câu 3',
-  phaseOneCheck: 'Xác định tọa độ (x; y) của từng cặp số và thay đúng vị trí vào 2x - y - 1.',
-  phaseOneQuickCheck: {
-    question: 'Với cặp số (1; 1), giá trị nào được thay vào x và y?',
-    options: ['x = 1, y = 1', 'x = 1, y = 0', 'x = 0, y = 1'],
-    correctAnswer: 'x = 1, y = 1',
+const STAGE_1_CURRICULUM_ITEMS_16W: LearningItem[] = [
+  {
+    id: 'cdqt-c1-d1-q1',
+    subject: 'toan',
+    topic: 'Phương trình bậc nhất hai ẩn',
+    weekSpan: 1,
+    sourceRef: '[CĐOT] Bộ Đề Theo Chương Toán 9 - 7991 • Chương 1 - Đề 1 - TN Câu 1',
+    phaseOneCheck:
+      'Nhắc lại dạng tổng quát ax + by = c và điều kiện đối với các hệ số a, b trước khi loại trừ.',
+    phaseOneQuickCheck: {
+      question: 'Trong phương trình bậc nhất hai ẩn ax + by = c, điều kiện của a và b là gì?',
+      options: [
+        'a ≠ 0 hoặc b ≠ 0',
+        'a = 0 và b = 0',
+        'a > 0 và b > 0',
+      ],
+      correctAnswer: 'a ≠ 0 hoặc b ≠ 0',
+    },
+    errorCategory: 'concept',
+    prompt:
+      'Trong các phương trình sau, phương trình nào không phải là phương trình bậc nhất hai ẩn?',
+    options: [
+      'x + 2y = 1',
+      '0x - 0y = 5',
+      '0x - y = 3',
+      'x + 0y = -6',
+    ],
+    correctAnswer: '0x - 0y = 5',
+    hints: [
+      'Phương trình bậc nhất hai ẩn có dạng ax + by = c với a, b không đồng thời bằng 0.',
+      'Soát từng phương án xem biểu thức nào có cả hệ số của x và hệ số của y cùng bằng 0.',
+    ],
+    commonMistake:
+      'Nhầm lẫn phương trình có một hệ số bằng 0 (như 0x - y = 3 hoặc x + 0y = -6) là không phải phương trình bậc nhất hai ẩn.',
+    parentGuide: {
+      keyConcept:
+        'Phương trình bậc nhất hai ẩn ax + by = c chỉ cần ít nhất một trong hai hệ số a hoặc b khác 0.',
+      guidingQuestion:
+        'Con thử kiểm tra từng đáp án xem chỗ nào cả hệ số của x và y đều bằng 0 nhé?',
+    },
   },
-  errorCategory: 'execution',
-  prompt: 'Cặp số nào sau đây là nghiệm của phương trình 2x - y - 1 = 0?',
-  options: ['(0; 1)', '(1; 0)', '(1; 1)', '(-1; 0)'],
-  correctAnswer: '(1; 1)',
-  hints: [
-    'Thay lần lượt giá trị x và y vào vế trái của biểu thức 2x - y - 1.',
-    'Cặp số đúng sẽ làm cho giá trị vế trái bằng 0.',
-  ],
-  commonMistake: 'Thay nhầm thứ tự x và y hoặc nhầm dấu khi tính phép trừ.',
-  parentGuide: {
-    keyConcept: 'Cặp số (x0; y0) là nghiệm của phương trình khi thay vào làm hai vế bằng nhau.',
-    guidingQuestion: 'Con thay x = 1 và y = 1 vào 2x - y - 1 trước rồi kiểm tra có bằng 0 không nhé?',
+  {
+    id: 'cdqt-c1-d1-q2',
+    subject: 'toan',
+    topic: 'Phương trình bậc nhất hai ẩn',
+    weekSpan: 1,
+    sourceRef: '[CĐOT] Bộ Đề Theo Chương Toán 9 - 7991 • Chương 1 - Đề 1 - TN Câu 2',
+    phaseOneCheck:
+      'Đưa phương trình x + 2y - 1 = 0 về dạng chuẩn ax + by = c rồi đối chiếu từng hệ số.',
+    phaseOneQuickCheck: {
+      question: 'Chuyển -1 sang vế phải của phương trình x + 2y - 1 = 0 ta được vế phải là bao nhiêu?',
+      options: ['1', '-1', '0'],
+      correctAnswer: '1',
+    },
+    errorCategory: 'trap_condition',
+    prompt:
+      'Hệ số a, b, c tương ứng của phương trình bậc nhất hai ẩn x + 2y - 1 = 0 là:',
+    options: [
+      'a = 1; b = 1; c = 0',
+      'a = 1; b = 2; c = -1',
+      'a = 1; b = 2; c = 1',
+      'a = 1; b = -2; c = 1',
+    ],
+    correctAnswer: 'a = 1; b = 2; c = -1',
+    hints: [
+      'Viết lại x + 2y - 1 = 0 dưới dạng ax + by = c.',
+      'Chú ý dấu của số hạng tự do khi chuyển sang vế phải.',
+    ],
+    commonMistake:
+      'Quên đổi dấu khi chuyển -1 sang vế phải nên nhầm thành c = 1 thay vì c = -1.',
+    parentGuide: {
+      keyConcept:
+        'Khi chuyển vế một số hạng, phải đổi dấu số hạng đó; hệ số c nằm ở vế phải của dạng ax + by = c.',
+      guidingQuestion:
+        'Khi đưa -1 từ vế trái sang vế phải thì dấu của nó đổi thành gì hả con?',
+    },
   },
-};
+  {
+    id: 'cdqt-c1-d1-tl3',
+    subject: 'toan',
+    topic: 'Hệ phương trình bậc nhất hai ẩn',
+    weekSpan: 2,
+    sourceRef: '[CĐOT] Bộ Đề Theo Chương Toán 9 - 7991 • Chương 1 - Đề 1 - TL Câu 3',
+    phaseOneCheck:
+      'Gọi ẩn cho số sản phẩm kế hoạch của từng xí nghiệp, đặt điều kiện và phân biệt số lượng kế hoạch với thực tế.',
+    phaseOneQuickCheck: {
+      question: 'Nếu xí nghiệp I vượt mức 15% kế hoạch x thì số sản phẩm thực tế của xí nghiệp I biểu diễn thế nào?',
+      options: ['1,15x', '0,15x', 'x + 15'],
+      correctAnswer: '1,15x',
+    },
+    errorCategory: 'execution',
+    prompt:
+      'Hai xí nghiệp theo kế hoạch phải làm 300 sản phẩm. Trên thực tế, xí nghiệp I vượt mức 15%, xí nghiệp II vượt mức 10%, do đó cả hai xí nghiệp làm tổng cộng 336 sản phẩm. Số sản phẩm xí nghiệp II phải làm theo kế hoạch là:',
+    options: [
+      '60 sản phẩm',
+      '240 sản phẩm',
+      '30 sản phẩm',
+      '90 sản phẩm',
+    ],
+    correctAnswer: '60 sản phẩm',
+    hints: [
+      'Gọi số sản phẩm kế hoạch của xí nghiệp I và xí nghiệp II lần lượt là x và y (với điều kiện phù hợp), ta có x + y = 300.',
+      'Số sản phẩm thực tế tương ứng là 1,15x và 1,10y, tổng cộng 336 sản phẩm.',
+    ],
+    commonMistake:
+      'Nhầm lẫn giữa số sản phẩm thực tế (1,15x; 1,10y) và phần vượt mức (0,15x; 0,10y) hoặc đọc nhầm yêu cầu hỏi xí nghiệp II.',
+    parentGuide: {
+      keyConcept:
+        'Vượt mức p% so với kế hoạch nghĩa là thực tế đạt (100% + p%) kế hoạch.',
+      guidingQuestion:
+        'Con viết hai phương trình rồi nhẩm xem xí nghiệp II chiếm bao nhiêu phần trong tổng 300 sản phẩm kế hoạch nhé?',
+    },
+  },
+];
+
+const FALLBACK_ITEM: LearningItem = STAGE_1_CURRICULUM_ITEMS_16W[0];
 
 function formatDuration(sec: number): string {
   const m = Math.floor(sec / 60);
@@ -127,9 +217,12 @@ export default function App() {
 
   const allItems = useMemo<LearningItem[]>(() => {
     const core = Array.isArray(CORE_SEED_ITEMS) ? CORE_SEED_ITEMS : [];
+    const curriculumStage1 = Array.isArray(STAGE_1_CURRICULUM_ITEMS_16W)
+      ? STAGE_1_CURRICULUM_ITEMS_16W
+      : [];
     const extra =
       extraPackLoaded && Array.isArray(EXTRA_MOCK_EXAM_ITEMS) ? EXTRA_MOCK_EXAM_ITEMS : [];
-    const merged = [...core, ...extra];
+    const merged = [...curriculumStage1, ...core, ...extra];
     return merged.length > 0 ? merged : [FALLBACK_ITEM];
   }, [extraPackLoaded]);
 
@@ -481,38 +574,53 @@ export default function App() {
       <style>{`
         .dad-challenge-page {
           min-height: 100vh;
-          background: linear-gradient(180deg, #fff7ed 0%, #f8fafc 45%, #eff6ff 100%);
-          color: #0f172a;
+          background:
+            radial-gradient(circle at 12% 8%, rgba(251, 146, 60, 0.14), transparent 36%),
+            radial-gradient(circle at 88% 12%, rgba(20, 184, 166, 0.12), transparent 38%),
+            linear-gradient(180deg, #faf7f2 0%, #f4f7fb 52%, #eef5f4 100%);
+          color: #1e293b;
           font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-          padding-bottom: 28px;
+          padding: 12px 0 36px;
           box-sizing: border-box;
         }
-        .dad-topbar {
-          background: #ffffff;
-          border-bottom: 1px solid #e2e8f0;
-          position: sticky;
-          top: 0;
-          z-index: 40;
-        }
-        .dad-topbar-inner {
+        .dad-topbar-wrap {
           max-width: 1120px;
           margin: 0 auto;
-          padding: 8px 12px;
+          padding: 0 12px;
+          position: sticky;
+          top: 10px;
+          z-index: 40;
+        }
+        .dad-topbar {
+          background: rgba(255, 255, 255, 0.92);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(226, 232, 240, 0.95);
+          border-radius: 22px;
+          box-shadow: 0 12px 28px -10px rgba(30, 41, 59, 0.12), 0 2px 6px rgba(30, 41, 59, 0.04);
+        }
+        .dad-topbar-inner {
+          padding: 10px 14px;
           display: flex;
           flex-wrap: wrap;
           align-items: center;
           justify-content: space-between;
-          gap: 8px;
+          gap: 10px;
         }
         .dad-container {
-          max-width: 1040px;
-          margin: 12px auto 0;
+          max-width: 1060px;
+          margin: 14px auto 0;
           padding: 0 12px;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 14px;
         }
-        .dad-nav-row {
+        .dad-nav-float {
+          background: rgba(255, 255, 255, 0.88);
+          backdrop-filter: blur(10px);
+          border: 1px solid #e2e8f0;
+          border-radius: 20px;
+          padding: 8px;
+          box-shadow: 0 10px 24px -12px rgba(15, 23, 42, 0.1);
           display: flex;
           flex-wrap: wrap;
           align-items: center;
@@ -522,14 +630,23 @@ export default function App() {
         .dad-tabs {
           display: grid;
           grid-template-columns: repeat(5, minmax(0, 1fr));
-          gap: 5px;
+          gap: 6px;
           flex: 1;
           min-width: 300px;
         }
         .dad-stage-dots {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 8px;
+          gap: 10px;
+        }
+        .dad-stage-pill {
+          border-radius: 16px;
+          padding: 9px 12px;
+          font-size: 12px;
+          font-weight: 800;
+          text-align: center;
+          box-shadow: 0 6px 16px -8px rgba(15, 23, 42, 0.12);
+          transition: transform 0.16s ease, box-shadow 0.16s ease;
         }
         .dad-topic-desktop {
           display: none;
@@ -537,12 +654,12 @@ export default function App() {
         .dad-topic-mobile {
           display: block;
           width: 100%;
-          min-height: 40px;
-          border-radius: 10px;
+          min-height: 42px;
+          border-radius: 12px;
           border: 1px solid #cbd5e1;
-          background: #ffffff;
-          color: #0f172a;
-          padding: 8px 10px;
+          background: #f8fafc;
+          color: #1e293b;
+          padding: 8px 12px;
           font-size: 12.5px;
           font-weight: 700;
         }
@@ -559,14 +676,14 @@ export default function App() {
         .dad-grid {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 12px;
+          gap: 14px;
           align-items: start;
         }
         @media (min-width: 920px) {
           .dad-container {
             margin-top: 16px;
             padding: 0 16px;
-            gap: 14px;
+            gap: 16px;
           }
           .dad-grid {
             grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
@@ -575,129 +692,145 @@ export default function App() {
         }
         .dad-card {
           background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 20px;
-          padding: 14px;
-          box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+          border: 1px solid rgba(226, 232, 240, 0.9);
+          border-radius: 24px;
+          padding: 16px;
+          box-shadow:
+            0 16px 34px -14px rgba(15, 23, 42, 0.1),
+            0 2px 6px rgba(15, 23, 42, 0.03);
         }
         @media (min-width: 920px) {
           .dad-card {
-            padding: 18px;
+            padding: 20px;
           }
+        }
+        .dad-float-subcard {
+          border-radius: 16px;
+          box-shadow: 0 8px 20px -12px rgba(15, 23, 42, 0.1);
         }
         .dad-btn {
           min-height: 44px;
-          border-radius: 12px;
+          border-radius: 14px;
           font-size: 13px;
           font-weight: 700;
           cursor: pointer;
-          transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
+          box-shadow: 0 6px 14px -8px rgba(15, 23, 42, 0.18);
+          transition: transform 0.14s ease, box-shadow 0.16s ease, background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .dad-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 20px -10px rgba(15, 23, 42, 0.22);
         }
         .dad-btn:active {
-          transform: scale(0.98);
+          transform: translateY(0) scale(0.985);
         }
       `}</style>
 
-      <header className="dad-topbar">
-        <div className="dad-topbar-inner">
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-            <span
-              style={{
-                backgroundColor: '#ffedd5',
-                color: '#c2410c',
-                fontWeight: 900,
-                fontSize: 13,
-                padding: '5px 10px',
-                borderRadius: 10,
-              }}
-            >
-              BỐ THÁCH – CON GIẢI • KHÁNH NGỌC
-            </span>
-            <span
-              style={{
-                fontSize: 11.5,
-                fontWeight: 700,
-                backgroundColor: '#f1f5f9',
-                color: '#0f172a',
-                padding: '4px 9px',
-                borderRadius: 9999,
-              }}
-            >
-              Vòng {currentStageNumber} • {score}đ • Chuỗi {streak} (Kỷ lục {bestStreak}) • Thuộc {masteredInSubjectCount}/{subjectItems.length} • {questionSec}s ({formatDuration(elapsedSec)})
-            </span>
-          </div>
+      <div className="dad-topbar-wrap">
+        <header className="dad-topbar">
+          <div className="dad-topbar-inner">
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+              <span
+                style={{
+                  background: 'linear-gradient(135deg, #fff1e6 0%, #ffe4d6 100%)',
+                  color: '#c2410c',
+                  border: '1px solid #fed7aa',
+                  fontWeight: 900,
+                  fontSize: 12.5,
+                  padding: '6px 11px',
+                  borderRadius: 12,
+                }}
+              >
+                BỐ THÁCH – CON GIẢI • KHÁNH NGỌC
+              </span>
+              <span
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  backgroundColor: '#f1f5f9',
+                  color: '#334155',
+                  padding: '5px 10px',
+                  borderRadius: 9999,
+                }}
+              >
+                Vòng {currentStageNumber} • {score}đ • Chuỗi {streak} (Kỷ lục {bestStreak}) • Thuộc{' '}
+                {masteredInSubjectCount}/{subjectItems.length} • {questionSec}s (
+                {formatDuration(elapsedSec)})
+              </span>
+            </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
-            <button
-              type="button"
-              onClick={() => {
-                setWithin16WeeksOnly((prev) => !prev);
-                setSelectedTopic('ALL');
-                resetPoolContext();
-              }}
-              style={{
-                borderRadius: 9,
-                border: within16WeeksOnly ? 'none' : '1px solid #cbd5e1',
-                backgroundColor: within16WeeksOnly ? '#0f766e' : '#ffffff',
-                color: within16WeeksOnly ? '#ffffff' : '#334155',
-                padding: '6px 10px',
-                fontSize: 11.5,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              {within16WeeksOnly ? 'Trong 16 tuần' : 'Tất cả tuần'}
-            </button>
-            <button
-              type="button"
-              onClick={handleToggleWrongReview}
-              style={{
-                borderRadius: 9,
-                border: reviewWrongOnly ? 'none' : '1px solid #fecdd3',
-                backgroundColor: reviewWrongOnly ? '#e11d48' : '#fff1f2',
-                color: reviewWrongOnly ? '#ffffff' : '#be123c',
-                padding: '6px 10px',
-                fontSize: 11.5,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              {reviewWrongOnly ? 'Thoát kèo sai' : `Kèo sai (${wrongIds.length})`}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPunchEnabled((v) => !v)}
-              style={{
-                borderRadius: 9,
-                border: '1px solid #fcd34d',
-                backgroundColor: '#fef3c7',
-                color: '#92400e',
-                padding: '6px 10px',
-                fontSize: 11.5,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              Lò xo bố: {punchEnabled ? 'Bật' : 'Tắt'}
-            </button>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setWithin16WeeksOnly((prev) => !prev);
+                  setSelectedTopic('ALL');
+                  resetPoolContext();
+                }}
+                style={{
+                  borderRadius: 11,
+                  border: within16WeeksOnly ? '1px solid #0d9488' : '1px solid #cbd5e1',
+                  backgroundColor: within16WeeksOnly ? '#0f766e' : '#f8fafc',
+                  color: within16WeeksOnly ? '#ffffff' : '#334155',
+                  padding: '6px 11px',
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {within16WeeksOnly ? 'Trong 16 tuần' : 'Tất cả tuần'}
+              </button>
+              <button
+                type="button"
+                onClick={handleToggleWrongReview}
+                style={{
+                  borderRadius: 11,
+                  border: reviewWrongOnly ? '1px solid #e11d48' : '1px solid #fecdd3',
+                  backgroundColor: reviewWrongOnly ? '#e11d48' : '#fff1f2',
+                  color: reviewWrongOnly ? '#ffffff' : '#be123c',
+                  padding: '6px 11px',
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {reviewWrongOnly ? 'Thoát kèo sai' : `Kèo sai (${wrongIds.length})`}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPunchEnabled((v) => !v)}
+                style={{
+                  borderRadius: 11,
+                  border: '1px solid #fcd34d',
+                  backgroundColor: '#fef9c3',
+                  color: '#854d0e',
+                  padding: '6px 11px',
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Lò xo bố: {punchEnabled ? 'Bật' : 'Tắt'}
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
       <div className="dad-container">
-        <div className="dad-nav-row">
+        <div className="dad-nav-float">
           <div className="dad-tabs">
             <button
               type="button"
               onClick={() => setActiveTab('quest')}
               style={{
-                borderRadius: 10,
-                border: 'none',
-                padding: '8px 5px',
+                borderRadius: 12,
+                border: activeTab === 'quest' ? 'none' : '1px solid #e2e8f0',
+                padding: '8px 6px',
                 fontSize: 11.5,
                 fontWeight: 800,
                 cursor: 'pointer',
-                backgroundColor: activeTab === 'quest' ? '#0f172a' : '#ffffff',
+                backgroundColor: activeTab === 'quest' ? '#1e293b' : '#f8fafc',
                 color: activeTab === 'quest' ? '#ffffff' : '#334155',
               }}
             >
@@ -707,14 +840,14 @@ export default function App() {
               type="button"
               onClick={() => setActiveTab('spin')}
               style={{
-                borderRadius: 10,
-                border: 'none',
-                padding: '8px 5px',
+                borderRadius: 12,
+                border: activeTab === 'spin' ? 'none' : '1px solid #fed7aa',
+                padding: '8px 6px',
                 fontSize: 11.5,
                 fontWeight: 800,
                 cursor: 'pointer',
-                backgroundColor: activeTab === 'spin' ? '#ea580c' : '#ffffff',
-                color: activeTab === 'spin' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'spin' ? '#ea580c' : '#fff7ed',
+                color: activeTab === 'spin' ? '#ffffff' : '#9a3412',
               }}
             >
               Vòng quay
@@ -723,14 +856,14 @@ export default function App() {
               type="button"
               onClick={() => setActiveTab('lab')}
               style={{
-                borderRadius: 10,
-                border: 'none',
-                padding: '8px 5px',
+                borderRadius: 12,
+                border: activeTab === 'lab' ? 'none' : '1px solid #bae6fd',
+                padding: '8px 6px',
                 fontSize: 11.5,
                 fontWeight: 800,
                 cursor: 'pointer',
-                backgroundColor: activeTab === 'lab' ? '#0284c7' : '#ffffff',
-                color: activeTab === 'lab' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'lab' ? '#0284c7' : '#f0f9ff',
+                color: activeTab === 'lab' ? '#ffffff' : '#0369a1',
               }}
             >
               Đồ thị
@@ -739,14 +872,14 @@ export default function App() {
               type="button"
               onClick={() => setActiveTab('formulas')}
               style={{
-                borderRadius: 10,
-                border: 'none',
-                padding: '8px 5px',
+                borderRadius: 12,
+                border: activeTab === 'formulas' ? 'none' : '1px solid #bfdbfe',
+                padding: '8px 6px',
                 fontSize: 11.5,
                 fontWeight: 800,
                 cursor: 'pointer',
-                backgroundColor: activeTab === 'formulas' ? '#1d4ed8' : '#ffffff',
-                color: activeTab === 'formulas' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'formulas' ? '#2563eb' : '#eff6ff',
+                color: activeTab === 'formulas' ? '#ffffff' : '#1d4ed8',
               }}
             >
               Công thức
@@ -755,21 +888,28 @@ export default function App() {
               type="button"
               onClick={() => setActiveTab('parent')}
               style={{
-                borderRadius: 10,
-                border: 'none',
-                padding: '8px 5px',
+                borderRadius: 12,
+                border: activeTab === 'parent' ? 'none' : '1px solid #c7d2fe',
+                padding: '8px 6px',
                 fontSize: 11.5,
                 fontWeight: 800,
                 cursor: 'pointer',
-                backgroundColor: activeTab === 'parent' ? '#4338ca' : '#ffffff',
-                color: activeTab === 'parent' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'parent' ? '#4f46e5' : '#eef2ff',
+                color: activeTab === 'parent' ? '#ffffff' : '#3730a3',
               }}
             >
               Góc bố ({totalWrongAttempts})
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, minWidth: 190 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 6,
+              minWidth: 196,
+            }}
+          >
             <button
               type="button"
               onClick={() => {
@@ -777,7 +917,7 @@ export default function App() {
                 handleSwitchSubject('toan');
               }}
               style={{
-                borderRadius: 10,
+                borderRadius: 12,
                 border: subject === 'toan' ? 'none' : '1px solid #cbd5e1',
                 backgroundColor: subject === 'toan' ? '#ea580c' : '#ffffff',
                 color: subject === 'toan' ? '#ffffff' : '#334155',
@@ -796,9 +936,9 @@ export default function App() {
                 handleSwitchSubject('van');
               }}
               style={{
-                borderRadius: 10,
+                borderRadius: 12,
                 border: subject === 'van' ? 'none' : '1px solid #cbd5e1',
-                backgroundColor: subject === 'van' ? '#059669' : '#ffffff',
+                backgroundColor: subject === 'van' ? '#0d9488' : '#ffffff',
                 color: subject === 'van' ? '#ffffff' : '#334155',
                 padding: '8px 10px',
                 fontSize: 12,
@@ -818,17 +958,13 @@ export default function App() {
             return (
               <div
                 key={stepIdx}
+                className="dad-stage-pill"
                 style={{
-                  borderRadius: 12,
-                  padding: '7px 10px',
-                  fontSize: 12,
-                  fontWeight: 800,
-                  textAlign: 'center',
                   border: `1.5px solid ${
-                    done ? '#10b981' : active ? '#ea580c' : '#cbd5e1'
+                    done ? '#14b8a6' : active ? '#fb923c' : '#e2e8f0'
                   }`,
-                  backgroundColor: done ? '#ecfdf5' : active ? '#fff7ed' : '#ffffff',
-                  color: done ? '#047857' : active ? '#c2410c' : '#64748b',
+                  backgroundColor: done ? '#f0fdfa' : active ? '#fff7ed' : '#ffffff',
+                  color: done ? '#0f766e' : active ? '#c2410c' : '#64748b',
                 }}
               >
                 {done
@@ -843,10 +979,10 @@ export default function App() {
 
         {stageRewardOpen && (
           <div
+            className="dad-float-subcard"
             style={{
-              borderRadius: 18,
-              border: '2px solid #f59e0b',
-              background: 'linear-gradient(120deg, #fffbeb 0%, #fef3c7 100%)',
+              border: '2px solid #fbbf24',
+              background: 'linear-gradient(125deg, #fffbeb 0%, #fef3c7 100%)',
               padding: 16,
               display: 'flex',
               flexWrap: 'wrap',
@@ -866,7 +1002,7 @@ export default function App() {
               >
                 Bố đầu hàng kèo này! Thưởng +15 điểm cho Khánh Ngọc
               </div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', marginTop: 3 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#1e293b', marginTop: 3 }}>
                 Con đã vượt qua trọn vẹn {STAGE_SIZE} câu thách đấu của vòng {currentStageNumber}!
               </div>
             </div>
@@ -907,7 +1043,7 @@ export default function App() {
 
         {activeTab !== 'spin' && activeTab !== 'lab' && (
           <div className="dad-grid">
-            <section className="dad-card" style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+            <section className="dad-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <select
                 aria-label="Chọn dạng bài"
                 value={selectedTopic}
@@ -938,9 +1074,9 @@ export default function App() {
                       style={{
                         borderRadius: 9999,
                         border: active ? 'none' : '1px solid #cbd5e1',
-                        backgroundColor: active ? '#0f172a' : '#f8fafc',
+                        backgroundColor: active ? '#0f766e' : '#f8fafc',
                         color: active ? '#ffffff' : '#334155',
-                        padding: '5px 11px',
+                        padding: '6px 12px',
                         fontSize: 11.5,
                         fontWeight: 700,
                         cursor: 'pointer',
@@ -961,16 +1097,16 @@ export default function App() {
                   gap: 6,
                 }}
               >
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   <button
                     type="button"
                     onClick={() => handleChangeMode('standard')}
                     style={{
-                      borderRadius: 9,
+                      borderRadius: 10,
                       border: drillMode === 'standard' ? 'none' : '1px solid #cbd5e1',
-                      backgroundColor: drillMode === 'standard' ? '#0f172a' : '#ffffff',
+                      backgroundColor: drillMode === 'standard' ? '#1e293b' : '#ffffff',
                       color: drillMode === 'standard' ? '#ffffff' : '#475569',
-                      padding: '5px 9px',
+                      padding: '6px 10px',
                       fontSize: 11,
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -982,11 +1118,11 @@ export default function App() {
                     type="button"
                     onClick={() => handleChangeMode('trap_focus')}
                     style={{
-                      borderRadius: 9,
+                      borderRadius: 10,
                       border: drillMode === 'trap_focus' ? 'none' : '1px solid #fcd34d',
                       backgroundColor: drillMode === 'trap_focus' ? '#b45309' : '#fffbeb',
                       color: drillMode === 'trap_focus' ? '#ffffff' : '#92400e',
-                      padding: '5px 9px',
+                      padding: '6px 10px',
                       fontSize: 11,
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -998,11 +1134,11 @@ export default function App() {
                     type="button"
                     onClick={() => handleChangeMode('violympic_speed')}
                     style={{
-                      borderRadius: 9,
+                      borderRadius: 10,
                       border: drillMode === 'violympic_speed' ? 'none' : '1px solid #93c5fd',
-                      backgroundColor: drillMode === 'violympic_speed' ? '#1d4ed8' : '#eff6ff',
+                      backgroundColor: drillMode === 'violympic_speed' ? '#2563eb' : '#eff6ff',
                       color: drillMode === 'violympic_speed' ? '#ffffff' : '#1e40af',
-                      padding: '5px 9px',
+                      padding: '6px 10px',
                       fontSize: 11,
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -1014,11 +1150,11 @@ export default function App() {
                     type="button"
                     onClick={() => handleChangeMode('recall_review')}
                     style={{
-                      borderRadius: 9,
-                      border: drillMode === 'recall_review' ? 'none' : '1px solid #a7f3d0',
-                      backgroundColor: drillMode === 'recall_review' ? '#047857' : '#ecfdf5',
-                      color: drillMode === 'recall_review' ? '#ffffff' : '#065f46',
-                      padding: '5px 9px',
+                      borderRadius: 10,
+                      border: drillMode === 'recall_review' ? 'none' : '1px solid #99f6e4',
+                      backgroundColor: drillMode === 'recall_review' ? '#0f766e' : '#f0fdfa',
+                      color: drillMode === 'recall_review' ? '#ffffff' : '#115e59',
+                      padding: '6px 10px',
                       fontSize: 11,
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -1034,11 +1170,11 @@ export default function App() {
               </div>
 
               <div
+                className="dad-float-subcard"
                 style={{
-                  borderRadius: 15,
                   backgroundColor: '#f8fafc',
-                  border: '1px solid #cbd5e1',
-                  padding: 13,
+                  border: '1px solid #e2e8f0',
+                  padding: 14,
                 }}
               >
                 <div
@@ -1064,7 +1200,7 @@ export default function App() {
                           border: '1px solid #fdba74',
                           backgroundColor: '#fff7ed',
                           color: '#c2410c',
-                          padding: '3px 9px',
+                          padding: '4px 10px',
                           fontSize: 11,
                           fontWeight: 800,
                           cursor: 'pointer',
@@ -1078,10 +1214,10 @@ export default function App() {
                       onClick={() => handleToggleMastered(current.id)}
                       style={{
                         borderRadius: 9999,
-                        border: isCurrentMastered ? 'none' : '1px solid #10b981',
-                        backgroundColor: isCurrentMastered ? '#059669' : '#ffffff',
-                        color: isCurrentMastered ? '#ffffff' : '#047857',
-                        padding: '3px 10px',
+                        border: isCurrentMastered ? 'none' : '1px solid #14b8a6',
+                        backgroundColor: isCurrentMastered ? '#0d9488' : '#ffffff',
+                        color: isCurrentMastered ? '#ffffff' : '#0f766e',
+                        padding: '4px 11px',
                         fontSize: 11,
                         fontWeight: 800,
                         cursor: 'pointer',
@@ -1094,11 +1230,11 @@ export default function App() {
 
                 <p
                   style={{
-                    margin: '7px 0 0',
+                    margin: '8px 0 0',
                     fontSize: 15,
                     fontWeight: 700,
                     color: '#0f172a',
-                    lineHeight: 1.5,
+                    lineHeight: 1.55,
                   }}
                 >
                   {current.prompt}
@@ -1107,11 +1243,11 @@ export default function App() {
 
               {quickCheckOpen && quickCheck && (
                 <div
+                  className="dad-float-subcard"
                   style={{
-                    borderRadius: 13,
                     backgroundColor: '#fff7ed',
                     border: '1px solid #fed7aa',
-                    padding: 11,
+                    padding: 12,
                     fontSize: 12,
                     color: '#7c2d12',
                     display: 'flex',
@@ -1130,13 +1266,13 @@ export default function App() {
                           type="button"
                           onClick={() => handleQuickCheckAnswer(qOpt)}
                           style={{
-                            borderRadius: 9,
+                            borderRadius: 10,
                             border: `1px solid ${
                               picked ? (ok ? '#10b981' : '#fb7185') : '#fdba74'
                             }`,
                             backgroundColor: picked ? (ok ? '#ecfdf5' : '#fff1f2') : '#ffffff',
                             color: '#0f172a',
-                            padding: '6px 10px',
+                            padding: '6px 11px',
                             fontSize: 11.5,
                             fontWeight: 700,
                             cursor: 'pointer',
@@ -1155,32 +1291,32 @@ export default function App() {
 
               {showTrapPreview && (
                 <div
+                  className="dad-float-subcard"
                   style={{
-                    borderRadius: 12,
                     backgroundColor: '#fffbeb',
                     border: '1px solid #fcd34d',
-                    padding: 10,
+                    padding: 11,
                     fontSize: 12,
                     color: '#78350f',
-                    lineHeight: 1.45,
+                    lineHeight: 1.5,
                   }}
                 >
                   <strong>Bố bật mí chỗ dễ vấp:</strong> {current.commonMistake}
                 </div>
               )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {safeOptions.map((opt, idx) => {
                   const chosen = selected === opt;
                   let bg = '#ffffff';
-                  let border = '#cbd5e1';
-                  let color = '#0f172a';
+                  let border = '#e2e8f0';
+                  let color = '#1e293b';
                   let fontWeight = 500;
 
                   if (chosen && opt === current.correctAnswer) {
-                    bg = '#ecfdf5';
-                    border = '#10b981';
-                    color = '#064e3b';
+                    bg = '#f0fdfa';
+                    border = '#14b8a6';
+                    color = '#0f766e';
                     fontWeight = 700;
                   } else if (chosen) {
                     bg = '#fff1f2';
@@ -1200,20 +1336,20 @@ export default function App() {
                         border: `1.5px solid ${border}`,
                         backgroundColor: bg,
                         color,
-                        padding: '10px 12px',
+                        padding: '10px 13px',
                         textAlign: 'left',
                         fontSize: 13,
                         fontWeight,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 9,
+                        gap: 10,
                       }}
                     >
                       <span
                         style={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: 7,
+                          width: 26,
+                          height: 26,
+                          borderRadius: 9,
                           backgroundColor: '#f1f5f9',
                           color: '#334155',
                           fontSize: 11.5,
@@ -1234,14 +1370,14 @@ export default function App() {
 
               {selected && (
                 <div
+                  className="dad-float-subcard"
                   style={{
-                    borderRadius: 12,
-                    padding: 11,
+                    padding: 12,
                     fontSize: 12.5,
                     lineHeight: 1.5,
-                    backgroundColor: isCorrect ? '#ecfdf5' : '#fff1f2',
-                    color: isCorrect ? '#065f46' : '#9f1239',
-                    border: `1px solid ${isCorrect ? '#a7f3d0' : '#fecdd3'}`,
+                    backgroundColor: isCorrect ? '#f0fdfa' : '#fff1f2',
+                    color: isCorrect ? '#0f766e' : '#9f1239',
+                    border: `1px solid ${isCorrect ? '#99f6e4' : '#fecdd3'}`,
                   }}
                 >
                   <div style={{ fontWeight: 800 }}>{banterMessage}</div>
@@ -1253,7 +1389,13 @@ export default function App() {
                 </div>
               )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 7 }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: 8,
+                }}
+              >
                 <button
                   type="button"
                   onClick={handleOpenHint}
@@ -1289,7 +1431,7 @@ export default function App() {
                 style={{
                   width: '100%',
                   border: 'none',
-                  backgroundColor: '#0f172a',
+                  background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
                   color: '#ffffff',
                   padding: '11px 14px',
                   fontSize: 13.5,
@@ -1299,22 +1441,22 @@ export default function App() {
               </button>
             </section>
 
-            <aside className="dad-card" style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+            <aside className="dad-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {activeTab === 'quest' && (
                 <>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>
                     Góc trợ giúp của HLV Bố
                   </div>
 
                   <div
+                    className="dad-float-subcard"
                     style={{
-                      borderRadius: 12,
                       backgroundColor: '#f8fafc',
                       border: '1px solid #e2e8f0',
-                      padding: 11,
+                      padding: 12,
                       fontSize: 12,
                       color: '#334155',
-                      lineHeight: 1.5,
+                      lineHeight: 1.55,
                     }}
                   >
                     <strong>Bố dặn trước khi giải:</strong> {current.phaseOneCheck}
@@ -1322,17 +1464,17 @@ export default function App() {
 
                   {hintStep > 0 && (
                     <div
+                      className="dad-float-subcard"
                       style={{
-                        borderRadius: 12,
                         backgroundColor: '#fffbeb',
                         border: '1px solid #fde68a',
-                        padding: 11,
+                        padding: 12,
                         fontSize: 12,
                         color: '#78350f',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: 5,
-                        lineHeight: 1.5,
+                        gap: 6,
+                        lineHeight: 1.55,
                       }}
                     >
                       <strong style={{ color: '#92400e' }}>Thẻ gợi ý từng bước:</strong>
@@ -1346,24 +1488,25 @@ export default function App() {
 
                   {showParentInline && (
                     <div
+                      className="dad-float-subcard"
                       style={{
-                        borderRadius: 12,
                         backgroundColor: '#eef2ff',
                         border: '1px solid #c7d2fe',
-                        padding: 11,
+                        padding: 12,
                         fontSize: 12,
                         color: '#1e1b4b',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 6,
-                        lineHeight: 1.5,
+                        lineHeight: 1.55,
                       }}
                     >
                       <div>
                         <strong>Chìa khóa kiến thức:</strong> {current.parentGuide?.keyConcept}
                       </div>
                       <div>
-                        <strong>Bố hỏi gợi mở (không giải hộ):</strong> &ldquo;{current.parentGuide?.guidingQuestion}&rdquo;
+                        <strong>Bố hỏi gợi mở (không giải hộ):</strong> &ldquo;
+                        {current.parentGuide?.guidingQuestion}&rdquo;
                       </div>
                     </div>
                   )}
@@ -1374,11 +1517,11 @@ export default function App() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12 }}>
                   {subject === 'toan' && (
                     <div
+                      className="dad-float-subcard"
                       style={{
-                        borderRadius: 12,
                         backgroundColor: '#eff6ff',
                         border: '1px solid #bfdbfe',
-                        padding: 11,
+                        padding: 12,
                         color: '#1e3a8a',
                         display: 'flex',
                         flexDirection: 'column',
@@ -1387,8 +1530,8 @@ export default function App() {
                     >
                       <div style={{ fontWeight: 800 }}>Gói đề thi thử vào 10 môn Toán</div>
                       <div>
-                        Gói câu hỏi đề thi thử bổ sung ({EXTRA_MOCK_EXAM_ITEMS.length} câu đã kiểm chứng):{' '}
-                        <strong>{extraPackLoaded ? 'Đã nạp' : 'Chưa nạp'}</strong>
+                        Gói câu hỏi đề thi thử bổ sung ({EXTRA_MOCK_EXAM_ITEMS.length} câu đã kiểm
+                        chứng): <strong>{extraPackLoaded ? 'Đã nạp' : 'Chưa nạp'}</strong>
                       </div>
                       <button
                         type="button"
@@ -1400,7 +1543,7 @@ export default function App() {
                         style={{
                           width: '100%',
                           border: 'none',
-                          backgroundColor: '#1d4ed8',
+                          backgroundColor: '#2563eb',
                           color: '#ffffff',
                           padding: '9px 12px',
                         }}
@@ -1413,23 +1556,23 @@ export default function App() {
                   {subjectFormulaCards.map((card) => (
                     <div
                       key={card.id}
+                      className="dad-float-subcard"
                       style={{
-                        borderRadius: 12,
-                        border: '1px solid #cbd5e1',
+                        border: '1px solid #e2e8f0',
                         backgroundColor: '#f8fafc',
-                        padding: 11,
+                        padding: 12,
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: 5,
+                        gap: 6,
                       }}
                     >
-                      <div style={{ fontWeight: 800, color: '#0f172a' }}>{card.topic}</div>
+                      <div style={{ fontWeight: 800, color: '#1e293b' }}>{card.topic}</div>
                       <div style={{ fontSize: 11, color: '#64748b' }}>{card.weightNote}</div>
                       <div
                         style={{
-                          borderRadius: 8,
-                          backgroundColor: '#fff',
-                          padding: 8,
+                          borderRadius: 10,
+                          backgroundColor: '#ffffff',
+                          padding: 9,
                           border: '1px solid #e2e8f0',
                         }}
                       >
@@ -1437,9 +1580,9 @@ export default function App() {
                       </div>
                       <div
                         style={{
-                          borderRadius: 8,
+                          borderRadius: 10,
                           backgroundColor: '#fffbeb',
-                          padding: 8,
+                          padding: 9,
                           color: '#78350f',
                         }}
                       >
@@ -1453,24 +1596,27 @@ export default function App() {
               {activeTab === 'parent' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div
+                    className="dad-float-subcard"
                     style={{
-                      borderRadius: 12,
-                      backgroundColor: '#ecfdf5',
-                      border: '1px solid #a7f3d0',
-                      padding: 11,
+                      backgroundColor: '#f0fdfa',
+                      border: '1px solid #99f6e4',
+                      padding: 12,
                       fontSize: 12,
-                      color: '#064e3b',
+                      color: '#115e59',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 5,
-                      lineHeight: 1.5,
+                      lineHeight: 1.55,
                     }}
                   >
                     <div style={{ fontWeight: 800, fontSize: 13 }}>
                       Tổng kết kèo đấu của Khánh Ngọc
                     </div>
                     <div>
-                      Đã giải <strong>{answeredCount}</strong> kèo (đúng <strong>{accuracy}%</strong>) • Kỷ lục chuỗi đúng: <strong>{bestStreak}</strong> • Đã chinh phục <strong>{masteredIds.length}</strong>/{allItems.length} bài.
+                      Đã giải <strong>{answeredCount}</strong> kèo (đúng{' '}
+                      <strong>{accuracy}%</strong>) • Kỷ lục chuỗi đúng:{' '}
+                      <strong>{bestStreak}</strong> • Đã chinh phục{' '}
+                      <strong>{masteredIds.length}</strong>/{allItems.length} bài.
                     </div>
                     <div>
                       Nhóm lỗi nổi bật nhất:{' '}
@@ -1486,11 +1632,11 @@ export default function App() {
                   </div>
 
                   <div
+                    className="dad-float-subcard"
                     style={{
-                      borderRadius: 12,
                       backgroundColor: '#f8fafc',
-                      border: '1px solid #cbd5e1',
-                      padding: 11,
+                      border: '1px solid #e2e8f0',
+                      padding: 12,
                       fontSize: 11.5,
                       color: '#334155',
                       display: 'flex',
@@ -1508,11 +1654,11 @@ export default function App() {
                         disabled={syncBusy}
                         onClick={handlePushCloud}
                         style={{
-                          borderRadius: 8,
+                          borderRadius: 9,
                           border: '1px solid #cbd5e1',
                           backgroundColor: '#ffffff',
-                          color: '#0f172a',
-                          padding: '5px 10px',
+                          color: '#1e293b',
+                          padding: '6px 11px',
                           fontSize: 11,
                           fontWeight: 700,
                           cursor: 'pointer',
@@ -1525,11 +1671,11 @@ export default function App() {
                         disabled={syncBusy}
                         onClick={handlePullCloud}
                         style={{
-                          borderRadius: 8,
+                          borderRadius: 9,
                           border: '1px solid #cbd5e1',
                           backgroundColor: '#ffffff',
-                          color: '#0f172a',
-                          padding: '5px 10px',
+                          color: '#1e293b',
+                          padding: '6px 11px',
                           fontSize: 11,
                           fontWeight: 700,
                           cursor: 'pointer',
@@ -1542,11 +1688,11 @@ export default function App() {
                   </div>
 
                   <div
+                    className="dad-float-subcard"
                     style={{
-                      borderRadius: 12,
                       backgroundColor: '#eef2ff',
                       border: '1px solid #c7d2fe',
-                      padding: 11,
+                      padding: 12,
                       fontSize: 12,
                       color: '#1e1b4b',
                       display: 'flex',
@@ -1570,11 +1716,11 @@ export default function App() {
                           type="button"
                           onClick={handleResetMistakes}
                           style={{
-                            borderRadius: 8,
+                            borderRadius: 9,
                             border: '1px solid #a5b4fc',
                             backgroundColor: '#ffffff',
                             color: '#312e81',
-                            padding: '4px 9px',
+                            padding: '4px 10px',
                             fontSize: 11,
                             fontWeight: 700,
                             cursor: 'pointer',
@@ -1600,8 +1746,8 @@ export default function App() {
 
                   {mistakeList.length === 0 ? (
                     <div
+                      className="dad-float-subcard"
                       style={{
-                        borderRadius: 12,
                         border: '1px solid #e2e8f0',
                         backgroundColor: '#f8fafc',
                         padding: 14,
@@ -1623,15 +1769,15 @@ export default function App() {
                         return (
                           <div
                             key={rec.itemId}
+                            className="dad-float-subcard"
                             style={{
-                              borderRadius: 12,
-                              border: '1px solid #cbd5e1',
+                              border: '1px solid #e2e8f0',
                               backgroundColor: '#ffffff',
-                              padding: 11,
+                              padding: 12,
                               fontSize: 12,
                               display: 'flex',
                               flexDirection: 'column',
-                              gap: 5,
+                              gap: 6,
                             }}
                           >
                             <div
@@ -1642,7 +1788,7 @@ export default function App() {
                                 gap: 8,
                               }}
                             >
-                              <span style={{ fontWeight: 800, color: '#0f172a' }}>
+                              <span style={{ fontWeight: 800, color: '#1e293b' }}>
                                 {rec.subject === 'toan' ? 'Toán 9' : 'Ngữ văn 9'} • {rec.topic}
                               </span>
                               <span
@@ -1681,9 +1827,9 @@ export default function App() {
                             <div style={{ fontSize: 11, color: '#64748b' }}>{rec.sourceRef}</div>
                             <div
                               style={{
-                                borderRadius: 8,
+                                borderRadius: 10,
                                 backgroundColor: '#fff1f2',
-                                padding: 7,
+                                padding: 8,
                                 color: '#881337',
                               }}
                             >
@@ -1691,9 +1837,9 @@ export default function App() {
                             </div>
                             <div
                               style={{
-                                borderRadius: 8,
+                                borderRadius: 10,
                                 backgroundColor: '#eef2ff',
-                                padding: 7,
+                                padding: 8,
                                 color: '#1e1b4b',
                               }}
                             >
@@ -1704,9 +1850,9 @@ export default function App() {
                                 type="button"
                                 onClick={() => handleToggleCoached(rec.itemId)}
                                 style={{
-                                  borderRadius: 8,
+                                  borderRadius: 9,
                                   border: coached ? 'none' : '1px solid #a5b4fc',
-                                  backgroundColor: coached ? '#4338ca' : '#eef2ff',
+                                  backgroundColor: coached ? '#4f46e5' : '#eef2ff',
                                   color: coached ? '#ffffff' : '#312e81',
                                   padding: '4px 10px',
                                   fontSize: 11,
