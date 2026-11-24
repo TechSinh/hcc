@@ -11,13 +11,18 @@ import type {
   MistakeRecord,
   Subject,
 } from './data/seedQuestions';
+import {
+  getDominantErrorCategory,
+  loadInitialLearningState,
+  saveLearningState,
+} from './services/learningStorage';
+import {
+  getSupabaseSyncConfig,
+  pullLearningStateFromSupabase,
+  pushLearningStateToSupabase,
+} from './services/supabaseSync';
 import { SpringPunchModal } from './components/SpringPunchModal';
 import { VisualDesmosLab } from './components/VisualDesmosLab';
-
-const MISTAKE_STORAGE_KEY = 'hcc_l9_mistakes_v21';
-const EXTRA_PACK_STORAGE_KEY = 'hcc_l9_extra_pack_v21';
-const MASTERED_STORAGE_KEY = 'hcc_l9_mastered_v21';
-const PARENT_COACHED_STORAGE_KEY = 'hcc_l9_parent_coached_v21';
 
 type DrillMode = 'standard' | 'trap_focus' | 'violympic_speed' | 'recall_review';
 
@@ -54,47 +59,24 @@ function formatDuration(sec: number): string {
 }
 
 export default function App() {
+  const initialState = useMemo(() => loadInitialLearningState(), []);
+  const syncConfig = useMemo(() => getSupabaseSyncConfig(), []);
+
   const [subject, setSubject] = useState<Subject>('toan');
   const [drillMode, setDrillMode] = useState<DrillMode>('standard');
   const [selectedTopic, setSelectedTopic] = useState<string>('ALL');
   const [reviewWrongOnly, setReviewWrongOnly] = useState(false);
   const [activeTab, setActiveTab] = useState<'quest' | 'lab' | 'formulas' | 'parent'>('quest');
 
-  const [extraPackLoaded, setExtraPackLoaded] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(EXTRA_PACK_STORAGE_KEY) === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  const [masteredIds, setMasteredIds] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem(MASTERED_STORAGE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as unknown) : [];
-      return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [coachedIds, setCoachedIds] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem(PARENT_COACHED_STORAGE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as unknown) : [];
-      return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const allItems = useMemo<LearningItem[]>(() => {
-    const core = Array.isArray(CORE_SEED_ITEMS) ? CORE_SEED_ITEMS : [];
-    const extra =
-      extraPackLoaded && Array.isArray(EXTRA_MOCK_EXAM_ITEMS) ? EXTRA_MOCK_EXAM_ITEMS : [];
-    const merged = [...core, ...extra];
-    return merged.length > 0 ? merged : [FALLBACK_ITEM];
-  }, [extraPackLoaded]);
+  const [extraPackLoaded, setExtraPackLoaded] = useState<boolean>(initialState.extraPackLoaded);
+  const [masteredIds, setMasteredIds] = useState<string[]>(initialState.masteredIds);
+  const [needsReinforcementIds, setNeedsReinforcementIds] = useState<string[]>(
+    initialState.needsReinforcementIds
+  );
+  const [coachedIds, setCoachedIds] = useState<string[]>(initialState.coachedIds);
+  const [mistakeMap, setMistakeMap] = useState<Record<string, MistakeRecord>>(
+    initialState.mistakeMap
+  );
 
   const [index, setIndex] = useState(0);
   const [phaseOneDone, setPhaseOneDone] = useState(false);
@@ -106,7 +88,8 @@ export default function App() {
   const [showTrapPreview, setShowTrapPreview] = useState(false);
 
   const [streak, setStreak] = useState(0);
-  const [score, setScore] = useState(0);
+  const [bestStreak, setBestStreak] = useState<number>(initialState.bestStreak);
+  const [score, setScore] = useState<number>(initialState.totalScore);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [elapsedSec, setElapsedSec] = useState(0);
@@ -115,15 +98,16 @@ export default function App() {
   const [punchOpen, setPunchOpen] = useState(false);
   const [punchEnabled, setPunchEnabled] = useState(true);
   const [showParentInline, setShowParentInline] = useState(false);
+  const [syncStatusMessage, setSyncStatusMessage] = useState<string | null>(null);
+  const [syncBusy, setSyncBusy] = useState(false);
 
-  const [mistakeMap, setMistakeMap] = useState<Record<string, MistakeRecord>>(() => {
-    try {
-      const raw = localStorage.getItem(MISTAKE_STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as Record<string, MistakeRecord>) : {};
-    } catch {
-      return {};
-    }
-  });
+  const allItems = useMemo<LearningItem[]>(() => {
+    const core = Array.isArray(CORE_SEED_ITEMS) ? CORE_SEED_ITEMS : [];
+    const extra =
+      extraPackLoaded && Array.isArray(EXTRA_MOCK_EXAM_ITEMS) ? EXTRA_MOCK_EXAM_ITEMS : [];
+    const merged = [...core, ...extra];
+    return merged.length > 0 ? merged : [FALLBACK_ITEM];
+  }, [extraPackLoaded]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -134,36 +118,25 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(MISTAKE_STORAGE_KEY, JSON.stringify(mistakeMap));
-    } catch {
-      // Bỏ qua khi không có quyền lưu trữ cục bộ
-    }
-  }, [mistakeMap]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(EXTRA_PACK_STORAGE_KEY, String(extraPackLoaded));
-    } catch {
-      // Bỏ qua khi không có quyền lưu trữ cục bộ
-    }
-  }, [extraPackLoaded]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(MASTERED_STORAGE_KEY, JSON.stringify(masteredIds));
-    } catch {
-      // Bỏ qua khi không có quyền lưu trữ cục bộ
-    }
-  }, [masteredIds]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(PARENT_COACHED_STORAGE_KEY, JSON.stringify(coachedIds));
-    } catch {
-      // Bỏ qua khi không có quyền lưu trữ cục bộ
-    }
-  }, [coachedIds]);
+    saveLearningState({
+      mistakeMap,
+      masteredIds,
+      needsReinforcementIds,
+      coachedIds,
+      extraPackLoaded,
+      totalScore: score,
+      bestStreak,
+      updatedAt: new Date().toISOString(),
+    });
+  }, [
+    mistakeMap,
+    masteredIds,
+    needsReinforcementIds,
+    coachedIds,
+    extraPackLoaded,
+    score,
+    bestStreak,
+  ]);
 
   const wrongIds = useMemo(() => Object.keys(mistakeMap), [mistakeMap]);
 
@@ -193,18 +166,33 @@ export default function App() {
       const filtered = list.filter((item) => wrongIds.includes(item.id));
       if (filtered.length > 0) list = filtered;
     } else if (drillMode === 'recall_review') {
-      const needRecall = list.filter((item) => !masteredIds.includes(item.id));
-      if (needRecall.length > 0) list = needRecall;
+      const priorityList = list.filter(
+        (item) => needsReinforcementIds.includes(item.id) && !masteredIds.includes(item.id)
+      );
+      if (priorityList.length > 0) {
+        list = priorityList;
+      } else {
+        const unmastered = list.filter((item) => !masteredIds.includes(item.id));
+        if (unmastered.length > 0) list = unmastered;
+      }
     }
     return list.length > 0 ? list : [FALLBACK_ITEM];
-  }, [subjectItems, selectedTopic, reviewWrongOnly, wrongIds, drillMode, masteredIds]);
+  }, [
+    subjectItems,
+    selectedTopic,
+    reviewWrongOnly,
+    wrongIds,
+    drillMode,
+    needsReinforcementIds,
+    masteredIds,
+  ]);
 
   const current: LearningItem = poolItems[index % poolItems.length] ?? FALLBACK_ITEM;
   const safeOptions = Array.isArray(current.options) ? current.options : [];
   const safeHints = Array.isArray(current.hints) ? current.hints : [];
   const quickCheck = current.phaseOneQuickCheck;
   const isCurrentMastered = masteredIds.includes(current.id);
-  const isCurrentCoached = coachedIds.includes(current.id);
+  const isCurrentReinforce = needsReinforcementIds.includes(current.id);
 
   const resetQuestionState = () => {
     setPhaseOneDone(false);
@@ -243,9 +231,14 @@ export default function App() {
   };
 
   const handleToggleMastered = (itemId: string) => {
-    setMasteredIds((prev) =>
-      prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId]
-    );
+    setMasteredIds((prev) => {
+      const exists = prev.includes(itemId);
+      if (exists) {
+        return prev.filter((id) => id !== itemId);
+      }
+      setNeedsReinforcementIds((rPrev) => rPrev.filter((id) => id !== itemId));
+      return [...prev, itemId];
+    });
   };
 
   const handleToggleCoached = (itemId: string) => {
@@ -273,11 +266,19 @@ export default function App() {
       const speedBonus = drillMode === 'violympic_speed' && questionSec <= 25 ? 5 : 0;
       setCorrectCount((c) => c + 1);
       setStreak(nextStreak);
+      setBestStreak((b) => Math.max(b, nextStreak));
       setScore((s) => s + 10 + speedBonus);
+      if (hintStep === 0) {
+        setNeedsReinforcementIds((prev) => prev.filter((id) => id !== current.id));
+      }
       return;
     }
 
     setStreak(0);
+    setNeedsReinforcementIds((prev) =>
+      prev.includes(current.id) ? prev : [...prev, current.id]
+    );
+    setMasteredIds((prev) => prev.filter((id) => id !== current.id));
     setMistakeMap((prev) => {
       const existing = prev[current.id];
       return {
@@ -300,8 +301,16 @@ export default function App() {
     }
   };
 
+  const handleOpenHint = () => {
+    setHintStep((s) => Math.min(s + 1, safeHints.length));
+    setNeedsReinforcementIds((prev) =>
+      prev.includes(current.id) ? prev : [...prev, current.id]
+    );
+  };
+
   const handleResetMistakes = () => {
     setMistakeMap({});
+    setNeedsReinforcementIds([]);
     setCoachedIds([]);
     setReviewWrongOnly(false);
     setIndex(0);
@@ -313,9 +322,48 @@ export default function App() {
     setIndex((prev) => (prev + 1) % poolItems.length);
   };
 
+  const handlePushCloud = async () => {
+    setSyncBusy(true);
+    const res = await pushLearningStateToSupabase({
+      mistakeMap,
+      masteredIds,
+      needsReinforcementIds,
+      coachedIds,
+      extraPackLoaded,
+      totalScore: score,
+      bestStreak,
+      updatedAt: new Date().toISOString(),
+    });
+    setSyncStatusMessage(res.message);
+    setSyncBusy(false);
+  };
+
+  const handlePullCloud = async () => {
+    setSyncBusy(true);
+    const res = await pullLearningStateFromSupabase();
+    if (res.ok && res.remoteState) {
+      setMistakeMap(res.remoteState.mistakeMap ?? {});
+      setMasteredIds(res.remoteState.masteredIds ?? []);
+      setNeedsReinforcementIds(res.remoteState.needsReinforcementIds ?? []);
+      setCoachedIds(res.remoteState.coachedIds ?? []);
+      setExtraPackLoaded(Boolean(res.remoteState.extraPackLoaded));
+      if (typeof res.remoteState.totalScore === 'number') {
+        setScore(res.remoteState.totalScore);
+      }
+      if (typeof res.remoteState.bestStreak === 'number') {
+        setBestStreak(res.remoteState.bestStreak);
+      }
+      setIndex(0);
+      resetQuestionState();
+    }
+    setSyncStatusMessage(res.message);
+    setSyncBusy(false);
+  };
+
   const mistakeList = Object.values(mistakeMap).sort((a, b) => b.wrongCount - a.wrongCount);
   const totalWrongAttempts = mistakeList.reduce((acc, item) => acc + item.wrongCount, 0);
   const maxWrongCount = mistakeList.length > 0 ? mistakeList[0].wrongCount : 1;
+  const dominantCategory = useMemo(() => getDominantErrorCategory(mistakeList), [mistakeList]);
 
   const categorySummary = useMemo(() => {
     const counts: Record<ErrorCategory, number> = {
@@ -334,10 +382,23 @@ export default function App() {
     [subjectItems, masteredIds]
   );
 
+  const reinforcementCount = useMemo(
+    () =>
+      subjectItems.filter(
+        (item) => needsReinforcementIds.includes(item.id) && !masteredIds.includes(item.id)
+      ).length,
+    [subjectItems, needsReinforcementIds, masteredIds]
+  );
+
   const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
   const isCorrect = selected === current.correctAnswer;
   const progressPercent = Math.round((((index % poolItems.length) + 1) / poolItems.length) * 100);
   const currentPhaseNum = selected ? 3 : phaseOneDone ? 2 : 1;
+
+  const sessionParentPrompt =
+    mistakeList.length > 0
+      ? mistakeList[0].guidingQuestion
+      : 'Hôm nay con thấy dạng bài nào dễ hiểu nhất và điều kiện nào cần lưu ý kỹ nhất khi lên cấp 3?';
 
   return (
     <div className="slim-page">
@@ -486,7 +547,7 @@ export default function App() {
                 borderRadius: 9999,
               }}
             >
-              {score}đ • Chuỗi {streak} • {accuracy}% • Đã thuộc {masteredInSubjectCount}/{subjectItems.length} • {questionSec}s ({formatDuration(elapsedSec)})
+              {score}đ • Chuỗi {streak} (Kỷ lục {bestStreak}) • {accuracy}% • Thuộc {masteredInSubjectCount}/{subjectItems.length} • {questionSec}s ({formatDuration(elapsedSec)})
             </span>
           </div>
 
@@ -756,7 +817,15 @@ export default function App() {
                 })}
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 6,
+                }}
+              >
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                   <button
                     type="button"
@@ -820,7 +889,7 @@ export default function App() {
                       cursor: 'pointer',
                     }}
                   >
-                    Chống quên
+                    Chống quên ({reinforcementCount})
                   </button>
                 </div>
 
@@ -856,9 +925,18 @@ export default function App() {
                   padding: 13,
                 }}
               >
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 6,
+                  }}
+                >
                   <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>
                     {current.topic} • {current.sourceRef}
+                    {isCurrentReinforce && !isCurrentMastered ? ' • Cần củng cố' : ''}
                   </span>
                   <button
                     type="button"
@@ -905,7 +983,14 @@ export default function App() {
                     gap: 8,
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
                     <strong>Chốt Pha 1: {quickCheck.question}</strong>
                     <button
                       type="button"
@@ -936,7 +1021,9 @@ export default function App() {
                           onClick={() => handleQuickCheckAnswer(qOpt)}
                           style={{
                             borderRadius: 9,
-                            border: `1px solid ${picked ? (ok ? '#10b981' : '#fb7185') : '#fdba74'}`,
+                            border: `1px solid ${
+                              picked ? (ok ? '#10b981' : '#fb7185') : '#fdba74'
+                            }`,
                             backgroundColor: picked ? (ok ? '#ecfdf5' : '#fff1f2') : '#ffffff',
                             color: '#0f172a',
                             padding: '6px 10px',
@@ -1057,7 +1144,7 @@ export default function App() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 7 }}>
                 <button
                   type="button"
-                  onClick={() => setHintStep((s) => Math.min(s + 1, safeHints.length))}
+                  onClick={handleOpenHint}
                   className="slim-btn"
                   style={{
                     border: '1px solid #cbd5e1',
@@ -1227,10 +1314,24 @@ export default function App() {
                     >
                       <div style={{ fontWeight: 800, color: '#0f172a' }}>{card.topic}</div>
                       <div style={{ fontSize: 11, color: '#64748b' }}>{card.weightNote}</div>
-                      <div style={{ borderRadius: 8, backgroundColor: '#fff', padding: 8, border: '1px solid #e2e8f0' }}>
+                      <div
+                        style={{
+                          borderRadius: 8,
+                          backgroundColor: '#fff',
+                          padding: 8,
+                          border: '1px solid #e2e8f0',
+                        }}
+                      >
                         <strong>Công thức / Quy tắc:</strong> {card.coreFormula}
                       </div>
-                      <div style={{ borderRadius: 8, backgroundColor: '#fffbeb', padding: 8, color: '#78350f' }}>
+                      <div
+                        style={{
+                          borderRadius: 8,
+                          backgroundColor: '#fffbeb',
+                          padding: 8,
+                          color: '#78350f',
+                        }}
+                      >
                         <strong>Chuẩn bị lên cấp 3:</strong> {card.transitionTip}
                       </div>
                     </div>
@@ -1240,6 +1341,93 @@ export default function App() {
 
               {activeTab === 'parent' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div
+                    style={{
+                      borderRadius: 12,
+                      backgroundColor: '#ecfdf5',
+                      border: '1px solid #a7f3d0',
+                      padding: 11,
+                      fontSize: 12,
+                      color: '#064e3b',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 5,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, fontSize: 13 }}>
+                      Tóm tắt phiên học của Khánh Ngọc
+                    </div>
+                    <div>
+                      Đã làm <strong>{answeredCount}</strong> câu trong phiên (đúng{' '}
+                      <strong>{accuracy}%</strong>) • Kỷ lục chuỗi đúng: <strong>{bestStreak}</strong> • Đã thuộc <strong>{masteredIds.length}</strong>/{allItems.length} bài.
+                    </div>
+                    <div>
+                      Nhóm lỗi nổi bật nhất:{' '}
+                      <strong>
+                        {dominantCategory ? ERROR_CATEGORY_LABELS[dominantCategory] : 'Chưa ghi nhận lỗi sai'}
+                      </strong>
+                    </div>
+                    <div>
+                      <strong>Câu hỏi mở đầu gợi ý cho bố mẹ:</strong> &ldquo;{sessionParentPrompt}&rdquo;
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      borderRadius: 12,
+                      backgroundColor: '#f8fafc',
+                      border: '1px solid #cbd5e1',
+                      padding: 11,
+                      fontSize: 11.5,
+                      color: '#334155',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                    }}
+                  >
+                    <div style={{ fontWeight: 800 }}>
+                      Đồng bộ đám mây (Supabase): {syncConfig.enabled ? 'Sẵn sàng' : 'Chưa cấu hình biến môi trường'}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        type="button"
+                        disabled={syncBusy}
+                        onClick={handlePushCloud}
+                        style={{
+                          borderRadius: 8,
+                          border: '1px solid #cbd5e1',
+                          backgroundColor: '#ffffff',
+                          color: '#0f172a',
+                          padding: '5px 10px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Đẩy lên Supabase
+                      </button>
+                      <button
+                        type="button"
+                        disabled={syncBusy}
+                        onClick={handlePullCloud}
+                        style={{
+                          borderRadius: 8,
+                          border: '1px solid #cbd5e1',
+                          backgroundColor: '#ffffff',
+                          color: '#0f172a',
+                          padding: '5px 10px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Tải từ Supabase
+                      </button>
+                    </div>
+                    {syncStatusMessage && <div style={{ color: '#1e3a8a' }}>{syncStatusMessage}</div>}
+                  </div>
+
                   <div
                     style={{
                       borderRadius: 12,
@@ -1253,8 +1441,17 @@ export default function App() {
                       gap: 6,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      <div style={{ fontWeight: 800, fontSize: 13 }}>Chẩn đoán lỗi sai &amp; nhật ký đồng hành</div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 8,
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, fontSize: 13 }}>
+                        Chẩn đoán lỗi sai &amp; nhật ký đồng hành
+                      </div>
                       {mistakeList.length > 0 && (
                         <button
                           type="button"
@@ -1275,7 +1472,13 @@ export default function App() {
                       )}
                     </div>
                     <div>
-                      Tổng lần sai: <strong>{totalWrongAttempts}</strong> • Đã gợi mở cùng con: <strong>{coachedIds.length}/{mistakeList.length}</strong> dạng • Khái niệm: <strong>{categorySummary.concept}</strong> • Bẫy/điều kiện: <strong>{categorySummary.trap_condition}</strong> • Thao tác: <strong>{categorySummary.execution}</strong>
+                      Tổng lần sai: <strong>{totalWrongAttempts}</strong> • Đã gợi mở cùng con:{' '}
+                      <strong>
+                        {coachedIds.length}/{mistakeList.length}
+                      </strong>{' '}
+                      dạng • Khái niệm: <strong>{categorySummary.concept}</strong> • Bẫy/điều kiện:{' '}
+                      <strong>{categorySummary.trap_condition}</strong> • Thao tác:{' '}
+                      <strong>{categorySummary.execution}</strong>
                     </div>
                     <div>
                       Nguyên tắc: bố mẹ dùng câu hỏi gợi mở để con tự tìm ra hướng làm, tránh làm hộ.
@@ -1299,7 +1502,10 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
                       {mistakeList.map((rec) => {
-                        const barWidth = Math.max(18, Math.round((rec.wrongCount / maxWrongCount) * 100));
+                        const barWidth = Math.max(
+                          18,
+                          Math.round((rec.wrongCount / maxWrongCount) * 100)
+                        );
                         const coached = coachedIds.includes(rec.itemId);
                         return (
                           <div
@@ -1315,7 +1521,14 @@ export default function App() {
                               gap: 5,
                             }}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 8,
+                              }}
+                            >
                               <span style={{ fontWeight: 800, color: '#0f172a' }}>
                                 {rec.subject === 'toan' ? 'Toán 9' : 'Ngữ văn 9'} • {rec.topic}
                               </span>
@@ -1335,14 +1548,42 @@ export default function App() {
                             <div style={{ fontSize: 11, fontWeight: 700, color: '#be123c' }}>
                               Nhóm lỗi: {ERROR_CATEGORY_LABELS[rec.errorCategory]}
                             </div>
-                            <div style={{ height: 5, width: '100%', borderRadius: 9999, backgroundColor: '#f1f5f9', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${barWidth}%`, backgroundColor: '#e11d48' }} />
+                            <div
+                              style={{
+                                height: 5,
+                                width: '100%',
+                                borderRadius: 9999,
+                                backgroundColor: '#f1f5f9',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: '100%',
+                                  width: `${barWidth}%`,
+                                  backgroundColor: '#e11d48',
+                                }}
+                              />
                             </div>
                             <div style={{ fontSize: 11, color: '#64748b' }}>{rec.sourceRef}</div>
-                            <div style={{ borderRadius: 8, backgroundColor: '#fff1f2', padding: 7, color: '#881337' }}>
+                            <div
+                              style={{
+                                borderRadius: 8,
+                                backgroundColor: '#fff1f2',
+                                padding: 7,
+                                color: '#881337',
+                              }}
+                            >
                               <strong>Lỗi sai:</strong> {rec.commonMistake}
                             </div>
-                            <div style={{ borderRadius: 8, backgroundColor: '#eef2ff', padding: 7, color: '#1e1b4b' }}>
+                            <div
+                              style={{
+                                borderRadius: 8,
+                                backgroundColor: '#eef2ff',
+                                padding: 7,
+                                color: '#1e1b4b',
+                              }}
+                            >
                               <strong>Hỏi gợi mở cho con:</strong> &ldquo;{rec.guidingQuestion}&rdquo;
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>

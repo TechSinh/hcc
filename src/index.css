@@ -3,7 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Học cùng con - Lớp 9</title>
+    <meta name="theme-color" content="#ea580c" />
+    <meta
+      name="description"
+      content="Học cùng con Lớp 9 (Toán & Ngữ văn) cho Phạm Hoàng Khánh Ngọc — ôn thi vào lớp 10 và đồng hành cùng phụ huynh."
+    />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Học Cùng Con L9 • Phạm Hoàng Khánh Ngọc</title>
   </head>
   <body>
     <div id="root"></div>
