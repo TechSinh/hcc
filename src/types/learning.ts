@@ -1,4 +1,4 @@
-export type Subject = 'toan' | 'van';
+﻿export type Subject = 'toan' | 'van';
 
 export interface ParentGuide {
   keyConcept: string;
